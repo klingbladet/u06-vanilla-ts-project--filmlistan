@@ -11,5 +11,29 @@
   "devDependencies": {
     "typescript": "~5.9.3",
     "vite": "^7.2.4"
-  }
+  },
+  "description": "Ni ska utveckla en applikation för att hålla koll på filmer där användare kan bläddra bland filmer, hantera sin watchlist och hålla reda på sedda filmer med betyg och recensioner. Syftet med uppgiften är att öva på API‑integration, CRUD‑operationer och att bygga en strukturerad TypeScript‑applikation.",
+  "main": "index.js",
+  "dependencies": {
+    "esbuild": "^0.25.12",
+    "fdir": "^6.5.0",
+    "nanoid": "^3.3.11",
+    "picocolors": "^1.1.1",
+    "picomatch": "^4.0.3",
+    "postcss": "^8.5.6",
+    "rollup": "^4.53.3",
+    "source-map-js": "^1.2.1",
+    "tinyglobby": "^0.2.15"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/klingbladet/u06-vanilla-ts-project--filmlistan.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/klingbladet/u06-vanilla-ts-project--filmlistan/issues"
+  },
+  "homepage": "https://github.com/klingbladet/u06-vanilla-ts-project--filmlistan#readme"
 }
