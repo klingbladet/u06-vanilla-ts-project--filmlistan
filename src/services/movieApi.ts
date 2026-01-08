@@ -1,6 +1,5 @@
 // API-anrop till Movie API
-import { DatabaseMovie } from "../types/movie";
-import { CreateMovieBody } from "../types/movie";
+import type { DatabaseMovie, CreateMovieBody } from "../types/movie";
 const API_BASE_URL = 'http://localhost:3000/api';
 const USER_ID = 'Chas-n-Chill';
 
