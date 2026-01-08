@@ -59,7 +59,7 @@ export default function home(): HTMLElement {
       const year = movie.release_date ? movie.release_date.split('-')[0] : 'N/A';
 
       card.innerHTML = `
-        <img src="${imageUrl}" alt="${movie.title}" loading="lazy" class="w-full aspect-[2/3] object-cover">
+        <img src="${imageUrl}" alt="${movie.title}" loading="lazy" class="w-full aspect-2/3 object-cover">
         <div class="movie-info p-4 flex flex-col flex-1">
             <h3 class="font-bold text-lg mb-1 line-clamp-1">${movie.title}</h3>
             <div class="flex justify-between items-center mb-2">
