@@ -4,19 +4,20 @@ import { setRenderCallback } from "./lib/store.ts";
 // Statiska sidor
 // måste refererera till den specifika .html filen med "?raw" för att kunna läsas in
 import headerHTML from "./views/static/header/index.html?raw";
-import homeHTML from "./views/static/home/index.html?raw";
+// import homeHTML from "./views/static/home/index.html?raw";
 import footerHTML from "./views/static/footer/index.html?raw";
 
 
 // Dynamiska sidor
 import about from "./views/about/index.ts";
+import home from "./views/home/index.ts";
 
 
 const currentPage = (): string | HTMLElement => {
   const path = window.location.pathname;
    switch (path) {
     case "/":
-      return homeHTML;
+      return home();
     case "/about":
       return about();
     default:

@@ -15,6 +15,7 @@
   "description": "Ni ska utveckla en applikation för att hålla koll på filmer där användare kan bläddra bland filmer, hantera sin watchlist och hålla reda på sedda filmer med betyg och recensioner. Syftet med uppgiften är att öva på API‑integration, CRUD‑operationer och att bygga en strukturerad TypeScript‑applikation.",
   "main": "index.js",
   "dependencies": {
+    "@tailwindcss/vite": "^4.1.18",
     "esbuild": "^0.25.12",
     "fdir": "^6.5.0",
     "nanoid": "^3.3.11",
@@ -23,6 +24,7 @@
     "postcss": "^8.5.6",
     "rollup": "^4.53.3",
     "source-map-js": "^1.2.1",
+    "tailwindcss": "^4.1.18",
     "tinyglobby": "^0.2.15"
   },
   "repository": {
