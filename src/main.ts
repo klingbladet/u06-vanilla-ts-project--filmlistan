@@ -12,6 +12,7 @@ import footerHTML from "./views/static/footer/index.html?raw";
 import about from "./views/about/index.ts";
 import home from "./views/home/index.ts";
 import watchlist from "./views/watchlist/index.ts";
+import watched from "./views/watched/index.ts";
 
 
 const currentPage = (): string | HTMLElement => {
@@ -23,6 +24,8 @@ const currentPage = (): string | HTMLElement => {
       return about();
     case "/watchlist":
       return watchlist();
+    case "/watched":
+      return watched();
     default:
       return "404";
   }
