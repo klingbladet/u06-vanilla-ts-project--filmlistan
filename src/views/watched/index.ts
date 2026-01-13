@@ -1,5 +1,7 @@
 import { getMovies } from "../../services/movieApi";
 import type { DatabaseMovie } from "../../types/movie";
+import { reviewComponent } from "../../components/review-rating";
+import { ratingComponent } from "../../components/review-rating";
 
 export default function watched(): HTMLElement {
   const container = document.createElement("div");
