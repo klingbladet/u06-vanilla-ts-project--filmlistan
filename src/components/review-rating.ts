@@ -20,7 +20,7 @@ export function reviewComponent() {
 
   reviewForm.append(reviewInput, submitReviewBtn);
   return reviewForm;
-
+  
 }
 
 export function ratingComponent() {
