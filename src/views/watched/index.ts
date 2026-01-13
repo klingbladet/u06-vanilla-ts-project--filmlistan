@@ -63,14 +63,12 @@ export default function watched(): HTMLElement {
       const reviewForm = reviewComponent();
       const stars = ratingComponent();
       const scoreText = document.createElement('p');
-      scoreText.textContent = 'Your Score'
 
       const watchedOn = document.createElement('p');
       watchedOn.className = "text-xs text-gray-400 mt-2";
       watchedOn.textContent = `Watched on: ${movie.date_watched || 'Unknown'}`;
       
-      detailsDiv.append(scoreText, stars);
-      contentDiv.append(titleEl, detailsDiv, watchedOn, reviewForm);
+      contentDiv.append(titleEl, detailsDiv, watchedOn, scoreText, stars, reviewForm);
       card.append(img, contentDiv);
       grid.appendChild(card);
     });
