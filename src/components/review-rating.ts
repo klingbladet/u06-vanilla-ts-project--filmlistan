@@ -12,13 +12,18 @@ export function reviewComponent() {
 }
 
 export function ratingComponent() {
+  const ratingWrapper = document.createElement('div');
   const starsContainer = document.createElement('div');
   const scoreText = document.createElement('p');
   const scoreNumber = document.createElement('p')
-  scoreText.textContent = 'Your score'
-  starsContainer.style.display = 'inline-block';
+  ratingWrapper.style.display = 'flex';
+  ratingWrapper.style.alignItems = 'center';
+  ratingWrapper.style.flexDirection = 'column';
+  ratingWrapper.style.gap = '5';
 
-  starsContainer.className = 'flex col'
+  scoreText.textContent = 'Your score';
+  scoreNumber.textContent = '';
+  starsContainer.style.display = 'inline-block';
 
 
   for (let i = 1; i <= 10; i++) {
@@ -29,7 +34,7 @@ export function ratingComponent() {
     starElement.style.color = 'gray';
     starElement.dataset.value = i.toString();
 
-    starsContainer.append(starElement, scoreNumber);
+    starsContainer.append(starElement);
   }
 
   let currentRating = 0;
@@ -50,6 +55,8 @@ export function ratingComponent() {
     scoreNumber.textContent = `${currentRating}` // show the number of stars as a number
   });
 
-  return starsContainer;
+  ratingWrapper.append(scoreText, starsContainer, scoreNumber)
+
+  return ratingWrapper
 }
 
