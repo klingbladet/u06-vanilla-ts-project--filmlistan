@@ -1,137 +1,191 @@
-import type { TMDBMovie } from "../../types/movie";
+import type { TMDBMovie, DatabaseMovie } from "../../types/movie";
 import { store, loadPopularMovies } from "../../lib/store";
 import { SearchComponent } from "../../components/search";
-import { addMovie } from "../../services/movieApi";
+import { addMovie, getMovies } from "../../services/movieApi";
 
+/* =====================================
+   HOME VIEW
+===================================== */
 export default function home(): HTMLElement {
   const container = document.createElement("div");
-  container.className = "home-view p-4 max-w-7xl mx-auto";
+  container.className = "max-w-7xl mx-auto p-6";
 
-  // 1. Lägg till sökfältet högst upp så vi kan använda det!
   container.appendChild(SearchComponent());
 
-  // 2. Bestäm vilken lista vi ska titta i
-  let moviesToShow: TMDBMovie[] = [];
-  let headingText = "";
+  const heading = document.createElement("h2");
+  heading.className = "text-3xl font-bold text-center my-8";
+  container.appendChild(heading);
 
+  const grid = document.createElement("div");
+  grid.className =
+    "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6";
+  container.appendChild(grid);
+
+  let movies: TMDBMovie[] = [];
+  let savedMovies: DatabaseMovie[] = [];
+
+  /* ===== LOAD SAVED MOVIES (ONCE) ===== */
+  getMovies().then((dbMovies) => {
+    savedMovies = dbMovies;
+  });
+
+  /* ===== DECIDE WHAT TO SHOW ===== */
   if (store.isSearching) {
-    // Om vi söker, använd sökresultaten
-    moviesToShow = store.searchResults;
-    headingText = `Sökresultat för "${store.currentSearchQuery}"`;
+    heading.textContent = `Resultat för "${store.currentSearchQuery}"`;
+    movies = store.searchResults;
   } else {
-    // Annars, använd de populära filmerna
-    moviesToShow = store.popularMovies;
-    headingText = "Populära filmer";
-    
-    // Om listan är tom, be roboten hämta filmer från internet
-    if (moviesToShow.length === 0) {
+    heading.textContent = " Populära filmer";
+    movies = store.popularMovies;
+
+    if (movies.length === 0) {
       loadPopularMovies();
     }
   }
 
-  // 3. Skapa rubriken med rätt namn
-  const heading = document.createElement("h2");
-  heading.textContent = headingText;
-  heading.className = "text-2xl font-bold mb-6 text-center";
-  container.appendChild(heading);
-
-  // 4. Skapa själva galleriet för filmerna
-  const grid = document.createElement("div");
-  grid.className = "movie-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6";
-
-  // 5. Visa ett meddelande om det är tomt
-  if (moviesToShow.length === 0) {
-    const message = document.createElement("p");
-    message.className = "col-span-full text-center text-gray-500 py-10";
-    message.textContent = store.isSearching 
-      ? "Hittade tyvärr inga filmer. Prova att söka på något annat!" 
-      : "Laddar populära filmer...";
-    grid.appendChild(message);
-  } else {
-    // 6. Rita ut varje filmkort från den lista vi valde
-    moviesToShow.forEach((movie: TMDBMovie) => {
-      const card = document.createElement("div");
-      card.className = "movie-card bg-white rounded-lg shadow-md overflow-hidden flex flex-col hover:shadow-lg transition-shadow";
-
-      const imageUrl = movie.poster_path
-        ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-        : 'https://placehold.co/500x750?text=Ingen+bild';
-
-      const year = movie.release_date ? movie.release_date.split('-')[0] : 'N/A';
-
-      card.innerHTML = `
-        <img src="${imageUrl}" alt="${movie.title}" loading="lazy" class="w-full aspect-2/3 object-cover">
-        <div class="movie-info p-4 flex flex-col flex-1">
-            <h3 class="font-bold text-lg mb-1 line-clamp-1">${movie.title}</h3>
-            <div class="flex justify-between items-center mb-2">
-              <span class="text-sm text-gray-500">${year}</span>
-              <span class="text-sm font-bold text-yellow-500">⭐ ${movie.vote_average.toFixed(1)}</span>
-            </div>
-            <p class="text-sm text-gray-600 line-clamp-2 mb-4 flex-1">${movie.overview || 'Ingen beskrivning tillgänglig.'}</p>
-            <div class="actions flex gap-2 mt-auto">
-              <button class="add-btn flex-1 bg-green-600 text-white text-xs py-2 rounded hover:bg-green-700 transition" data-id="${movie.id}">+ Watchlist</button>
-              <button class="watched-btn flex-1 bg-blue-600 text-white text-xs py-2 rounded hover:bg-blue-700 transition" data-id="${movie.id}">✓ Sedd</button>
-            </div>
-        </div>`;
-      grid.appendChild(card);
-    });
+  if (movies.length === 0) {
+    grid.innerHTML = `
+      <p class="col-span-full text-center text-gray-500">
+        Laddar filmer...
+      </p>`;
   }
-  
-  container.appendChild(grid);
 
-  // 7. Hantera klick på knapparna (Event Delegation)
-  container.addEventListener('click', async (e) => {
-    const target = e.target as HTMLElement;
-    const btn = target.closest('button');
+  movies.forEach((movie) => {
+    const alreadySaved = savedMovies.some(
+      (m) => m.tmdb_id === movie.id
+    );
+    grid.appendChild(createMovieCard(movie, alreadySaved));
+  });
 
-    // Om vi inte klickade på en knapp, gör ingenting
-    if (!btn) return;
+  /* ===== BUTTON HANDLING ===== */
+  container.addEventListener("click", async (e) => {
+    const btn = (e.target as HTMLElement).closest("button");
+    if (!btn || btn.disabled) return;
 
     const movieId = Number(btn.dataset.id);
-    const movie = moviesToShow.find(m => m.id === movieId);
+    const action = btn.dataset.action;
 
+    const movie = movies.find((m) => m.id === movieId);
     if (!movie) return;
 
-    // Kolla vilken knapp det var
-    const isWatchlist = btn.classList.contains('add-btn');
-    const isWatched = btn.classList.contains('watched-btn');
+    btn.textContent = "Sparar...";
+    btn.disabled = true;
 
-    if (isWatchlist || isWatched) {
-      // Spara originaltexten ifall det blir fel
-      const originalText = btn.textContent;
-      btn.textContent = "Sparar...";
-      btn.disabled = true;
+    try {
+      await addMovie({
+        tmdb_id: movie.id,
+        title: movie.title,
+        poster_path: movie.poster_path ?? "",
+        release_date: movie.release_date ?? "",
+        overview: movie.overview,
+        status: action === "watchlist" ? "watchlist" : "watched",
+      });
 
-      try {
-        await addMovie({
-          tmdb_id: movie.id,
-          title: movie.title,
-          poster_path: movie.poster_path || "",
-          release_date: movie.release_date || "",
-          vote_average: movie.vote_average,
-          overview: movie.overview,
-          status: isWatchlist ? 'watchlist' : 'watched'
-        });
+      btn.textContent = "✔ Klar";
+      btn.className =
+        "flex-1 bg-gray-400 text-white text-sm py-2 rounded cursor-not-allowed";
 
-        // Ge feedback att det lyckades
-        btn.textContent = isWatchlist ? "Sparad!" : "Klar!";
-        btn.classList.remove(isWatchlist ? 'bg-green-600' : 'bg-blue-600');
-        btn.classList.add('bg-gray-500', 'cursor-not-allowed');
-        
-      } catch (error) {
-        console.error("Fel vid sparning:", error);
-        btn.textContent = "Fel!";
-        btn.classList.add('bg-red-600');
-        
-        // Återställ knappen efter 2 sekunder
-        setTimeout(() => {
-          btn.textContent = originalText;
-          btn.disabled = false;
-          btn.classList.remove('bg-red-600');
-        }, 2000);
-      }
+      showToast("Filmen sparades ✔");
+
+    } catch (error) {
+      btn.textContent = "Fel";
+      btn.disabled = false;
+      showToast("Något gick fel", false);
     }
   });
 
-  return container; 
+  return container;
 }
+
+/* =====================================
+   MOVIE CARD
+===================================== */
+function createMovieCard(movie: TMDBMovie, disabled: boolean): HTMLElement {
+  const card = document.createElement("div");
+  card.className =
+    "bg-white rounded-xl shadow hover:shadow-lg transition flex flex-col overflow-hidden";
+
+  const imageUrl = movie.poster_path
+    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+    : "https://placehold.co/500x750?text=No+Image";
+
+  /* ===== IMAGE WITH SKELETON ===== */
+  const imageWrapper = document.createElement("div");
+  imageWrapper.className =
+    "relative w-full h-72 bg-gray-200 animate-pulse";
+
+  const img = document.createElement("img");
+  img.src = imageUrl;
+  img.alt = movie.title;
+  img.loading = "lazy";
+  img.className =
+    "w-full h-full object-cover opacity-0 transition-opacity duration-500";
+
+  img.onload = () => {
+    imageWrapper.classList.remove("animate-pulse");
+    img.classList.remove("opacity-0");
+  };
+
+  imageWrapper.appendChild(img);
+
+  /* ===== CONTENT ===== */
+  const content = document.createElement("div");
+  content.className = "p-4 flex flex-col flex-1";
+
+  content.innerHTML = `
+    <h3 class="font-bold text-lg mb-1">${movie.title}</h3>
+    <p class="text-sm text-gray-500 mb-2">
+       ${movie.vote_average.toFixed(1)}
+    </p>
+    <p class="text-sm text-gray-600 line-clamp-3 mb-4">
+      ${movie.overview || "Ingen beskrivning."}
+    </p>
+
+    <div class="flex gap-2 mt-auto">
+      <button
+        data-id="${movie.id}"
+        data-action="watchlist"
+        ${disabled ? "disabled" : ""}
+        class="flex-1 ${
+          disabled
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-green-600 hover:bg-green-700"
+        } text-white text-sm py-2 rounded">
+        + Watchlist
+      </button>
+
+      <button
+        data-id="${movie.id}"
+        data-action="watched"
+        ${disabled ? "disabled" : ""}
+        class="flex-1 ${
+          disabled
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-blue-600 hover:bg-blue-700"
+        } text-white text-sm py-2 rounded">
+        ✓ Watched
+      </button>
+    </div>
+  `;
+
+  card.appendChild(imageWrapper);
+  card.appendChild(content);
+
+  return card;
+}
+
+/* =====================================
+   TOAST
+===================================== */
+function showToast(message: string, success = true) {
+  const toast = document.createElement("div");
+  toast.className = `
+    fixed bottom-6 right-6 px-4 py-3 rounded shadow-lg text-white z-50
+    ${success ? "bg-green-600" : "bg-red-600"}
+  `;
+  toast.textContent = message;
+
+  document.body.appendChild(toast);
+
+  setTimeout(() => toast.remove(), 3000);
+}
+
