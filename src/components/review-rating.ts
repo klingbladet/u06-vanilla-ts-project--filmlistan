@@ -1,4 +1,4 @@
-export function reviewComponent(): {
+export function reviewComponent() {
   const reviewForm = document.createElement('form');
   const reviewInput = document.createElement('input');
   const submitReviewBtn = document.createElement('button');
@@ -24,15 +24,15 @@ export function ratingComponent() {
   let currentRating = 0;
   starsContainer.addEventListener('click', (e) => {
     const clickedElement = e.target;
+    if(clickedElement instanceof HTMLElement) {
+      if(clickedElement.classList.contains('star')) {
+        const ratingValue = parseInt(clickedElement.dataset.value as string);
+        currentRating = ratingValue;
 
-    if(clickedElement.classList.contains('star')) {
-      const ratingValue = parseInt(clickedElement.dataset.value);
-      currentRating = ratingValue;
-
-      console.log(`Du valde betyget: ${currentRating}`);
+        console.log(`Du valde betyget: ${currentRating}`);
+      }
     }
   });
   return starsContainer;
-
 }
 

@@ -63,3 +63,6 @@ export default function watched(): HTMLElement {
   });
   return container;
 }
+
+reviewComponent()
+ratingComponent()
