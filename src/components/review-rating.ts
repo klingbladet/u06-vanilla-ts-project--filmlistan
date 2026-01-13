@@ -3,12 +3,24 @@ export function reviewComponent() {
   const reviewInput = document.createElement('input');
   const submitReviewBtn = document.createElement('button');
 
+  reviewForm.style.display = 'flex';
+  reviewForm.style.justifyContent = 'space-between'
+  reviewForm.style.marginTop = '10px'
   reviewInput.type = 'text';
   reviewInput.placeholder = 'Write your review';
   submitReviewBtn.type = 'submit';
+  submitReviewBtn.textContent = 'Submit';
+  submitReviewBtn.style.backgroundColor = 'gray';
+  submitReviewBtn.style.color = '#fff';
+  submitReviewBtn.style.cursor = 'pointer';
+  submitReviewBtn.style.borderRadius = '10px';
+  submitReviewBtn.style.padding = '1px';
+  submitReviewBtn.style.width = '70px';
+  submitReviewBtn.style.width = '70px';
 
   reviewForm.append(reviewInput, submitReviewBtn);
   return reviewForm;
+
 }
 
 export function ratingComponent() {
@@ -52,7 +64,7 @@ export function ratingComponent() {
       });
       console.log(`Du valde betyget: ${currentRating}`);
     }
-    scoreNumber.textContent = `${currentRating}` // show the number of stars as a number
+    scoreNumber.textContent = `${currentRating}` // Visa stjärnorna i form av siffra
   });
 
   ratingWrapper.append(scoreText, starsContainer, scoreNumber)
