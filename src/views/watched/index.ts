@@ -2,6 +2,7 @@ import { getMovies } from "../../services/movieApi";
 import type { DatabaseMovie } from "../../types/movie";
 import { reviewComponent } from "../../components/review-rating";
 import { ratingComponent } from "../../components/review-rating";
+import { deleteButtonComponent } from "../../components/buttons"; // Corrected import
 
 export default function watched(): HTMLElement {
   const container = document.createElement("div");
@@ -18,6 +19,14 @@ export default function watched(): HTMLElement {
   loadingMessage.textContent = "Loading history...";
   loadingMessage.className = "text-gray-500";
 
+  function showEmptyMessage() {
+    grid.innerHTML = "";
+    const emptyMessage = document.createElement("p");
+    emptyMessage.textContent = "You haven't marked any movies as watched yet.";
+    emptyMessage.className = "text-gray-500 text-center py-8";
+    container.appendChild(emptyMessage);
+  }
+
   container.appendChild(title);
   container.appendChild(loadingMessage);
   container.appendChild(grid);
@@ -29,16 +38,13 @@ export default function watched(): HTMLElement {
     const watchedMovies = movies.filter(movies => movies.status === 'watched');
     
     if (watchedMovies.length === 0) {
-      const emptyMessage = document.createElement("p");
-      emptyMessage.textContent = "You haven't marked any movies as watched yet.";
-      emptyMessage.className = "text-gray-500 text-center py-8";
-      container.appendChild(emptyMessage);
+      showEmptyMessage();
       return;
     }
     //Render the movies
     watchedMovies.forEach((movie) => {
       const card = document.createElement("div");
-      card.className = "movie-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow";
+      card.className = "movie-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow relative"; // Added 'relative'
       
       const imageUrl = movie.poster_path
       ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
@@ -50,7 +56,7 @@ export default function watched(): HTMLElement {
       img.className = "w-full h-auto";
 
       const contentDiv = document.createElement('div');
-      contentDiv.className = "p-4";
+      contentDiv.className = "p-4 flex flex-col pt-8"; // Added pt-8 to give space for the button
 
       const titleEl = document.createElement('h3');
       titleEl.className = "font-bold text-lg mb-2";
@@ -68,7 +74,14 @@ export default function watched(): HTMLElement {
       watchedOn.className = "text-xs text-gray-400 mt-2";
       watchedOn.textContent = `Watched on: ${movie.date_watched || 'Unknown'}`;
       
-      contentDiv.append(titleEl, detailsDiv, watchedOn, scoreText, stars, reviewForm);
+      const deleteButton = deleteButtonComponent(movie.id, () => { // Corrected usage
+        card.remove();
+        if (grid.children.length === 0) {
+          showEmptyMessage();
+        }
+      });
+      
+      contentDiv.append(titleEl, detailsDiv, watchedOn, scoreText, stars, reviewForm, deleteButton);
       card.append(img, contentDiv);
       grid.appendChild(card);
     });

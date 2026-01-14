@@ -1,4 +1,5 @@
 import { deleteMovie, getMovies, updateMovie } from "../../services/movieApi";
+import { deleteButtonComponent } from "../../components/buttons";
 import type { DatabaseMovie } from "../../types/movie";
 
 export default function watchlist(): HTMLElement {
@@ -27,26 +28,30 @@ export default function watchlist(): HTMLElement {
   loadingMessage.textContent = "Loading watchlist...";
   loadingMessage.className = "text-gray-500";
 
- 
+  function showEmptyMessage() {
+    grid.innerHTML = "";
+    const emptyMessage = document.createElement("p");
+    emptyMessage.textContent = "Your watchlist is empty. Add some movies to get started!";
+    emptyMessage.className = "text-gray-500 text-center py-8";
+    container.appendChild(emptyMessage);
+    clearBtn.style.display = 'none';
+  }
+
   container.appendChild(loadingMessage);
   container.appendChild(grid);
 
   // Load watchlist movies asynchronously
   getMovies().then((movies: DatabaseMovie[]) => {
-    // Remove loading message
     loadingMessage.remove();
-
-    // Filter for only watchlist movies
     const watchlistMovies = movies.filter(movie => movie.status === 'watchlist');
 
-    //Logic for clear all btn. Hides the btn if there are no movies in watchlist
     if (watchlistMovies.length === 0) {
-      clearBtn.style.display = 'none';
+      showEmptyMessage();
+      return;
     }
 
     clearBtn.addEventListener('click', async () => {
-      const count = watchlistMovies.length;
-      if (!confirm(`Are you sure you want to remove all ${count} movies from your watchlist`)) {
+      if (!confirm(`Are you sure you want to remove all ${watchlistMovies.length} movies from your watchlist?`)) {
         return;
       }
 
@@ -54,92 +59,71 @@ export default function watchlist(): HTMLElement {
       clearBtn.textContent ="Clearing...";
       try {
         await Promise.all(watchlistMovies.map(movie => deleteMovie(movie.id)));
-        location.reload();
+        showEmptyMessage(); // Update UI without reloading
       }
       catch (error) {
         console.error("Failed to clear watchlist", error);
         alert("Something went wrong while clearing the list");
+      } finally {
         clearBtn.disabled = false;
         clearBtn.textContent = "Clear All";
       }
     });
 
-    if (watchlistMovies.length === 0) {
-      const emptyMessage = document.createElement("p");
-      emptyMessage.textContent = "Your watchlist is empty. Add some movies to get started!";
-      emptyMessage.className = "text-gray-500 text-center py-8";
-      container.appendChild(emptyMessage);
-      return;
-    }
-
     watchlistMovies.forEach((movie) => {
       const card = document.createElement("div");
-      card.className = "movie-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow";
+      card.className = "movie-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow relative";
 
       const imageUrl = movie.poster_path
         ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
         : 'https://via.placeholder.com/500x750?text=No+Poster';
+      
+      const img = document.createElement('img');
+      img.src = imageUrl;
+      img.alt = movie.title;
+      img.className = "w-full h-auto";
 
-      card.innerHTML = `
-        <img src="${imageUrl}" alt="${movie.title}" class="w-full h-auto">
-        <div class="p-4">
-          <h3 class="font-bold text-lg mb-2">${movie.title}</h3>
-          <p class="text-sm text-gray-600">Status: ${movie.status}</p>
+      const contentDiv = document.createElement('div');
+      contentDiv.className = "p-4 flex flex-col";
 
-          <div class="flex gap-2">
-            <button class="btn-watched flex-1 bg-green-500 text-white py-1 px-2 rounded hover:bg-green-600 transition-colors text-sm">
-            Mark Watched
-            </button>
-            <button class="btn-delete flex-1 bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 transition-colors text-sm">
-            Remove
-            </button>
-          </div>
-        </div>
-      `;
-      // Find the buttons we just created
-      const watchedBtn = card.querySelector('.btn-watched') as HTMLButtonElement;
-      const deleteBtn = card.querySelector('.btn-delete') as HTMLButtonElement;
+      const titleEl = document.createElement('h3');
+      titleEl.className = "font-bold text-lg mb-2";
+      titleEl.textContent = movie.title;
 
-      //Add eventlistner for watched
+      const watchedBtn = document.createElement('button');
+      watchedBtn.textContent = "Mark Watched";
+      watchedBtn.className = "btn-watched mt-4 bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition-colors text-sm";
+      
       watchedBtn.addEventListener('click', async () => {
         try {
           watchedBtn.textContent = "Updating...";
           watchedBtn.disabled = true;
-          //Call TMDB API
           await updateMovie(movie.id, { status: 'watched' });
-          //Remove the card from UI
           card.remove();
 
           if (grid.children.length === 0) {
-            location.reload();
+            showEmptyMessage();
           }
         }
         catch (error) {
           console.error("Failed to update movie", error);
           watchedBtn.textContent = "Error!";
           setTimeout(() => {
-            watchedBtn.textContent = "Marked watched";
+            watchedBtn.textContent = "Mark Watched";
             watchedBtn.disabled = false;
           }, 2000);
         }
       });
-
-      deleteBtn.addEventListener('click', async () => {
-        if(!confirm("Are you sure you want to remove this movie?")) return;
-
-        try {
-          deleteBtn.textContent = "...";
-          await deleteMovie(movie.id);
-          card.remove();
-            if (grid.children.length === 0) {
-              location.reload();
-            }
-        }
-        catch (error) {
-          console.error ("Failed to delete", error);
+      
+      const deleteButton = deleteButtonComponent(movie.id, () => {
+        card.remove();
+        if (grid.children.length === 0) {
+          showEmptyMessage();
         }
       });
 
+      contentDiv.append(titleEl, watchedBtn);
+      card.append(img, contentDiv, deleteButton);
       grid.appendChild(card);
     });
   }).catch((error) => {
