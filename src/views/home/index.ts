@@ -1,37 +1,40 @@
 import type { TMDBMovie } from "../../types/movie";
-import { store, loadPopularMovies } from "../../lib/store";
+import { store, loadPopularMovies, searchMovies, loadRecommendations } from "../../lib/store";
 import { SearchComponent } from "../../components/search";
 import { addMovie } from "../../services/movieApi";
 
 export default function home(): HTMLElement {
   const container = document.createElement("div");
   container.className = "home-view p-4 max-w-7xl mx-auto";
-
+  //Ladda data parallelt och kör både populära & rekommendationer.
+  //Eftersom store.triggerRender() körs när de är klar kommer sidan automatiskt uppdateras
+  if (store.popularMovies.length === 0) {
+    loadPopularMovies(false);//False för att inte rendera den dirket
+  }
+  if (store.recommendations.length === 0) {  
+    loadRecommendations();//Startar hämtining av rekommendationer
+  }
   // 1. Lägg till sökfältet högst upp så vi kan använda det!
   container.appendChild(SearchComponent());
 
-  // 2. Bestäm vilken lista vi ska titta i
-  let moviesToShow: TMDBMovie[] = [];
-  let headingText = "";
+  // 2. Bestäm vilka filmer och vilken rubrik som ska visas
+  let moviesToShow = store.isSearching ? store.searchResults : store.popularMovies;
+  let sectionTitle = store.isSearching ? `Sökresultat: "${store.currentSearchQuery}"` : "Populära filmer just nu";
 
-  if (store.isSearching) {
-    // Om vi söker, använd sökresultaten
-    moviesToShow = store.searchResults;
-    headingText = `Sökresultat för "${store.currentSearchQuery}"`;
-  } else {
-    // Annars, använd de populära filmerna
-    moviesToShow = store.popularMovies;
-    headingText = "Populära filmer";
-    
-    // Om listan är tom, be roboten hämta filmer från internet
-    if (moviesToShow.length === 0) {
-      loadPopularMovies();
-    }
+  // Om vi INTE söker, men har rekommendationer -> Visa dem istället för populära
+  if (!store.isSearching && store.recommendations.length > 0) {
+    moviesToShow = store.recommendations;
+    sectionTitle = `Rekommenderat för dig (baserat på ${store.recommendedBasedOn})`;
+  }
+
+  // Om listan är tom (och vi inte söker), ladda populära filmer som fallback
+  if (moviesToShow.length === 0 && !store.isSearching) {
+    loadPopularMovies();
   }
 
   // 3. Skapa rubriken med rätt namn
   const heading = document.createElement("h2");
-  heading.textContent = headingText;
+  heading.textContent = sectionTitle;
   heading.className = "text-2xl font-bold mb-6 text-center";
   container.appendChild(heading);
 

@@ -1,12 +1,14 @@
 import type { TMDBMovie } from "../types/movie";
-import { getPopularMoviesTMDB, searchMoviesTMDB } from "../services/tmdbApi.ts";
-
+import { getPopularMoviesTMDB, searchMoviesTMDB, getRecommendationsTMDB } from "../services/tmdbApi.ts";
+import { getMovies } from "../services/movieApi.ts";
 class Store {
   renderCallback: () => void;
 
   // TMDB API state
   popularMovies: TMDBMovie[] = []; 
   searchResults: TMDBMovie[] = []; // Här hamnar filmerna vi sökt fram
+  recommendations: TMDBMovie[] = [];// Lista med rekommenderade filmer
+  recommendedBasedOn: string = "";// Title på filmen vi baserar tips på
   isSearching: boolean = false;    // Är vi i "sökläge" just nu
   currentSearchQuery: string = ""; // Vad vi sökte på
 
@@ -36,6 +38,35 @@ class Store {
       console.error("Det gick inte att söka;", error);
       this.searchResults = []; // om det blir fel töm listan
       this.triggerRender();
+    }
+  }
+
+  async loadRecommendation() {
+    try {
+      // Hämta filmer från DB
+      const myMovies = await getMovies();
+      //Försök hitta filmer i watched först
+      let sourceMovies = myMovies.filter(m => m.status === 'watched');
+      //Om det inte finns filmer i watched testa watchlist
+      if (sourceMovies.length === 0) {
+        sourceMovies = myMovies.filter(m => m.status === 'watchlist');
+      }
+      if (sourceMovies.length === 0) {
+        this.recommendations = [];
+        return;
+      }
+      //Funktionen för alagoritmen väljer en film baserat på tipsen och ska variera rekommendationerna efter du laddar om sidan.
+      const randomIndex = Math.floor(Math.random() * sourceMovies.length);
+      const baseMovie = sourceMovies[randomIndex];
+
+      this.recommendedBasedOn = baseMovie.title; //Spara title för UI:t
+      //Hämta rekommendationer från TMDB baserat på denna films ID
+      this.recommendations = await getRecommendationsTMDB(baseMovie.tmdb_id);
+      //Uppdatera vyerna
+      this.triggerRender();
+    } catch (error) {
+      console.error("Kunde inte ladda rekommendationerna:", error);
+      this.recommendations = [];
     }
   }
 
@@ -74,3 +105,4 @@ export { store };
 export const loadPopularMovies = store.loadPopularMovies.bind(store);  // Async
 export const setRenderCallback = store.setRenderCallback.bind(store);
 export const searchMovies = store.searchMovies.bind(store);
+export const loadRecommendations = store.loadRecommendation.bind(store);

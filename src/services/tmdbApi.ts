@@ -26,5 +26,14 @@ export async function searchMoviesTMDB(query: string): Promise<TMDBMovie[]> {
       throw new Error ('Kunde inte söka efter filmer');
     }
     const data = await response.json();
-    return data.results;
+    return data.results;  
+}
+
+export async function getRecommendationsTMDB(movieId: number): Promise<TMDBMovie[]> {
+  const response = await fetch(`${BASE_URL}/movie/${movieId}/recommendations?api_key=${API_KEY}&language=en-US&page=1`);
+  if (!response.ok) {
+    throw new Error('Kunde inte hämta rekommendationer');
+  }
+  const data = await response.json();
+  return data.results;
 }
