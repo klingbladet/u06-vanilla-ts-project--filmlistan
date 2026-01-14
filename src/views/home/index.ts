@@ -1,6 +1,7 @@
 import type { TMDBMovie } from "../../types/movie";
 import { store, loadPopularMovies } from "../../lib/store";
 import { SearchComponent } from "../../components/search";
+import { addMovie } from "../../services/movieApi";
 
 export default function home(): HTMLElement {
   const container = document.createElement("div");
@@ -75,7 +76,62 @@ export default function home(): HTMLElement {
       grid.appendChild(card);
     });
   }
-  
+
   container.appendChild(grid);
+
+// 7. Hantera klick på knapparna (Event Delegation)
+  container.addEventListener('click', async (e) => {
+    const target = e.target as HTMLElement;
+    const btn = target.closest('button');
+
+    // Om vi inte klickade på en knapp, gör ingenting
+    if (!btn) return;
+
+    const movieId = Number(btn.dataset.id);
+    const movie = moviesToShow.find(m => m.id === movieId);
+
+    if (!movie) return;
+
+    // Kolla vilken knapp det var
+    const isWatchlist = btn.classList.contains('add-btn');
+    const isWatched = btn.classList.contains('watched-btn');
+
+    if (isWatchlist || isWatched) {
+      // Spara originaltexten ifall det blir fel
+      const originalText = btn.textContent;
+      btn.textContent = "Sparar...";
+      btn.disabled = true;
+
+      try {
+        await addMovie({
+          tmdb_id: movie.id,
+          title: movie.title,
+          poster_path: movie.poster_path || "",
+          release_date: movie.release_date || "",
+          vote_average: movie.vote_average,
+          overview: movie.overview,
+          status: isWatchlist ? 'watchlist' : 'watched'
+        });
+
+        // Ge feedback att det lyckades
+        btn.textContent = isWatchlist ? "Sparad!" : "Klar!";
+        btn.classList.remove(isWatchlist ? 'bg-green-600' : 'bg-blue-600');
+        btn.classList.add('bg-gray-500', 'cursor-not-allowed');
+        
+      } catch (error) {
+        console.error("Fel vid sparning:", error);
+        btn.textContent = "Fel!";
+        btn.classList.add('bg-red-600');
+        
+        // Återställ knappen efter 2 sekunder
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.disabled = false;
+          btn.classList.remove('bg-red-600');
+        }, 2000);
+      }
+    }
+  });
+
   return container; 
 }
