@@ -40,6 +40,7 @@ export interface TMDBMovie {
     release_date: string;
     overview?: string;
     status: MovieStatus;
+    vote_average: number;
     personal_rating?: number | null
     review?: string | null;
     is_favorite?: boolean;
