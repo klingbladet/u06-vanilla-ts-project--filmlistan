@@ -79,10 +79,10 @@ export default function home(): HTMLElement {
       grid.appendChild(card);
     });
   }
-  
+
   container.appendChild(grid);
 
-  // 7. Hantera klick på knapparna (Event Delegation)
+// 7. Hantera klick på knapparna (Event Delegation)
   container.addEventListener('click', async (e) => {
     const target = e.target as HTMLElement;
     const btn = target.closest('button');
