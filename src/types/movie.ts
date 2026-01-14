@@ -44,4 +44,5 @@ export interface TMDBMovie {
     review?: string | null;
     is_favorite?: boolean;
     date_watched?: string | null;
+    vote_average: number | null;
   }
