@@ -1,11 +1,8 @@
 import type { TMDBMovie, DatabaseMovie } from "../../types/movie";
-import { store, loadPopularMovies } from "../../lib/store";
+import { store, loadPopularMovies, ensurePopularCount } from "../../lib/store";
 import { SearchComponent } from "../../components/search";
 import { getMovies, upsertMovieStatusByTmdbId } from "../../services/movieApi";
 
-/* =====================================
-   HOME VIEW (IMDB-LIKE)
-===================================== */
 export default function home(): HTMLElement {
   const container = document.createElement("div");
   container.className = "min-h-screen bg-zinc-950 text-white";
@@ -14,107 +11,276 @@ export default function home(): HTMLElement {
   inner.className = "max-w-7xl mx-auto px-4 py-6";
   container.appendChild(inner);
 
-  /* ---------- HERO ---------- */
+  // Mr hero here
   const hero = document.createElement("section");
   hero.className =
     "relative overflow-hidden rounded-2xl bg-gradient-to-r from-zinc-900 via-zinc-950 to-zinc-900 ring-1 ring-white/10";
   hero.innerHTML = `
     <div class="p-6 md:p-10">
-      <div class="inline-flex items-center gap-2 rounded-lg bg-amber-400 px-3 py-1 text-xs font-extrabold tracking-wide text-black">
-       FILMKOLLEN
+      <div class="inline-flex items-center rounded-lg bg-amber-400 px-3 py-1 text-xs font-extrabold tracking-wide text-black">
+        FILMKOLLEN
       </div>
-
 
       <h1 class="mt-4 text-3xl md:text-5xl font-extrabold tracking-tight">
         Hitta något att titta på.
         <span class="text-amber-400">Spara</span> dina favoriter.
       </h1>
 
-
       <p class="mt-3 max-w-2xl text-zinc-300">
-        Sök bland populära filmer och markera dem som watched.
+        Välj 20/25/50/100 per sida och bläddra med Next/Prev.
       </p>
     </div>
   `;
   inner.appendChild(hero);
 
-  /* ---------- SEARCH ---------- */
+  // Serac
   const searchWrap = document.createElement("div");
   searchWrap.className = "mt-6";
   searchWrap.appendChild(SearchComponent());
   inner.appendChild(searchWrap);
 
-  /* ---------- HEADING ---------- */
+  // CHIP
+  const chips = document.createElement("div");
+  chips.className = "mt-4 flex flex-wrap items-center gap-2";
+  const chipBase =
+    "rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/80 transition hover:bg-white/10 hover:text-white";
+  chips.innerHTML = `
+    <button data-chip="popular" class="${chipBase} bg-amber-400 text-black border-amber-400 hover:bg-amber-300">Popular</button>
+    <button data-chip="watchlist" class="${chipBase}">My Watchlist</button>
+    <button data-chip="watched" class="${chipBase}">Watched</button>
+  `;
+  inner.appendChild(chips);
+
+  // Heading of control
+  const topRow = document.createElement("div");
+  topRow.className = "mt-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between";
+  inner.appendChild(topRow);
+
   const heading = document.createElement("h2");
-  heading.className = "mt-10 flex items-center gap-3 text-xl md:text-2xl font-bold";
-  inner.appendChild(heading);
+  heading.className = "flex items-center gap-3 text-xl md:text-2xl font-extrabold";
+  topRow.appendChild(heading);
 
-  /* ---------- MOVIE ROW (IMDB SCROLL) ---------- */
-  const row = document.createElement("div");
-  row.className =
-    "mt-6 flex gap-4 overflow-x-auto pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
-  inner.appendChild(row);
+  const controls = document.createElement("div");
+  controls.className = "flex items-center gap-3";
+  controls.innerHTML = `
+    <label class="text-xs text-white/70">
+      Per sida
+      <select id="pageSize" class="ml-2 rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-xs text-white outline-none">
+        <option value="20" selected>20</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+    </label>
+    <div id="pageInfo" class="text-xs text-white/60"></div>
+  `;
+  topRow.appendChild(controls);
 
-  let movies: TMDBMovie[] = [];
+  // Grid
+  const grid = document.createElement("div");
+  grid.className = "mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5";
+  inner.appendChild(grid);
+
+  // Pager
+  const pager = document.createElement("div");
+  pager.className = "mt-6 flex items-center justify-between";
+  pager.innerHTML = `
+    <button id="prevBtn" class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition hover:bg-white/10">
+      ← Prev
+    </button>
+    <button id="nextBtn" class="rounded-xl bg-amber-400 px-4 py-2 text-xs font-semibold text-black transition hover:bg-amber-300">
+      Next →
+    </button>
+  `;
+  inner.appendChild(pager);
+
+  const pageSizeSelect = controls.querySelector<HTMLSelectElement>("#pageSize")!;
+  const pageInfo = controls.querySelector<HTMLDivElement>("#pageInfo")!;
+  const prevBtn = pager.querySelector<HTMLButtonElement>("#prevBtn")!;
+  const nextBtn = pager.querySelector<HTMLButtonElement>("#nextBtn")!;
+
+  // S
+  let activeChip: "popular" | "watchlist" | "watched" = "popular";
+  let perPage = Number(pageSizeSelect.value);
+  let page = 1;
+
+  let fullList: TMDBMovie[] = [];
   let savedMovies: DatabaseMovie[] = [];
 
   const findDbMovieByTmdbId = (tmdbId: number) =>
     savedMovies.find((m) => m.tmdb_id === tmdbId);
 
-  const render = () => {
-    row.innerHTML = "";
+  const setHeading = (text: string) => {
+    heading.innerHTML = `
+      <span class="h-6 w-1 rounded bg-amber-400"></span>
+      <span>${text}</span>
+    `;
+  };
 
-    if (movies.length === 0) {
-      row.innerHTML = `
-        <div class="w-full text-center text-zinc-400 py-10">
-          Laddar filmer...
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+  const updatePagerUI = () => {
+    const total = fullList.length;
+    const totalPages = Math.max(1, Math.ceil(total / perPage));
+    if (page > totalPages) page = totalPages;
+
+    const start = (page - 1) * perPage + 1;
+    const end = Math.min(page * perPage, total);
+
+    pageInfo.textContent =
+      total === 0 ? "0 filmer" : `${start}-${end} av ${total} • sida ${page}/${totalPages}`;
+
+    prevBtn.disabled = page <= 1;
+    prevBtn.classList.toggle("opacity-50", prevBtn.disabled);
+    prevBtn.classList.toggle("cursor-not-allowed", prevBtn.disabled);
+
+    nextBtn.disabled = page >= totalPages;
+    nextBtn.classList.toggle("opacity-50", nextBtn.disabled);
+    nextBtn.classList.toggle("cursor-not-allowed", nextBtn.disabled);
+  };
+
+  const render = () => {
+    grid.innerHTML = "";
+
+    if (fullList.length === 0) {
+      grid.innerHTML = `
+        <div class="col-span-full rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-sm text-white/70">
+          Inget att visa här ännu.
         </div>`;
+      updatePagerUI();
       return;
     }
 
-    movies.forEach((m) => {
+    const startIndex = (page - 1) * perPage;
+    const pageItems = fullList.slice(startIndex, startIndex + perPage);
+
+    pageItems.forEach((m) => {
       const dbMovie = findDbMovieByTmdbId(m.id);
-      row.appendChild(createMovieCard(m, dbMovie));
+      grid.appendChild(createMovieCard(m, dbMovie));
+    });
+
+    updatePagerUI();
+  };
+
+  const setChipActiveStyles = () => {
+    chips.querySelectorAll<HTMLButtonElement>("button").forEach((b) => {
+      const isActive = b.dataset.chip === activeChip;
+
+      if (isActive) {
+        b.classList.add("bg-amber-400", "text-black", "border-amber-400", "hover:bg-amber-300");
+        b.classList.remove("bg-white/5", "text-white/80");
+      } else {
+        b.classList.remove("bg-amber-400", "text-black", "border-amber-400", "hover:bg-amber-300");
+        b.classList.add("bg-white/5", "text-white/80");
+      }
     });
   };
 
-  /* ---------- LOAD SAVED MOVIES ---------- */
+  const buildFullListForCurrentView = async () => {
+    page = 1;
+
+    // search över riders
+    if (store.isSearching) {
+      setHeading(`Resultat för "${store.currentSearchQuery}"`);
+      fullList = store.searchResults;
+      setChipActiveStyles();
+      render();
+      return;
+    }
+
+    if (activeChip === "popular") {
+      setHeading("Populära just nu");
+
+      if (store.popularMovies.length === 0) await loadPopularMovies(false);
+
+      //   filmer  popular
+      await ensurePopularCount(perPage);
+
+      fullList = store.popularMovies;
+      setChipActiveStyles();
+      render();
+      return;
+    }
+
+    if (activeChip === "watchlist") {
+      setHeading("Min Watchlist");
+      const list = savedMovies.filter((m) => m.status === "watchlist");
+      fullList = list.map((m) => ({
+        id: m.tmdb_id,
+        title: m.title,
+        poster_path: m.poster_path ?? "",
+        release_date: m.release_date ?? "",
+        vote_average: m.vote_average ?? 0,
+        overview: m.overview ?? "",
+      })) as unknown as TMDBMovie[];
+      setChipActiveStyles();
+      render();
+      return;
+    }
+
+    setHeading("Watched");
+    const list = savedMovies.filter((m) => m.status === "watched");
+    fullList = list.map((m) => ({
+      id: m.tmdb_id,
+      title: m.title,
+      poster_path: m.poster_path ?? "",
+      release_date: m.release_date ?? "",
+      vote_average: m.vote_average ?? 0,
+      overview: m.overview ?? "",
+    })) as unknown as TMDBMovie[];
+    setChipActiveStyles();
+    render();
+  };
+
+  // Load DB movies
   getMovies()
     .then((dbMovies) => {
       savedMovies = dbMovies;
-      render();
+      buildFullListForCurrentView();
     })
-    .catch(() => {
-      // om backend failar, rendera ändå
-      render();
-    });
+    .catch(() => buildFullListForCurrentView());
 
-  /* ---------- DECIDE WHAT TO SHOW ---------- */
-  if (store.isSearching) {
-    heading.innerHTML = `
-      <span class="h-6 w-1 rounded bg-amber-400"></span>
-      <span>Resultat för "${store.currentSearchQuery}"</span>
-    `;
-    movies = store.searchResults;
-  } else {
-    heading.innerHTML = `
-      <span class="h-6 w-1 rounded bg-amber-400"></span>
-      <span>Populära filmer</span>
-    `;
-    movies = store.popularMovies;
+  buildFullListForCurrentView();
 
-    if (movies.length === 0) {
-      loadPopularMovies();
+  // event
+  chips.addEventListener("click", (e) => {
+    const btn = (e.target as HTMLElement).closest("button");
+    if (!btn) return;
+    const chip = btn.dataset.chip as typeof activeChip | undefined;
+    if (!chip) return;
+    activeChip = chip;
+    buildFullListForCurrentView();
+    scrollToTop();
+  });
+
+  pageSizeSelect.addEventListener("change", () => {
+    perPage = Number(pageSizeSelect.value);
+    buildFullListForCurrentView();
+    scrollToTop();
+  });
+
+  prevBtn.addEventListener("click", () => {
+    if (page <= 1) return;
+    page -= 1;
+    render();
+    scrollToTop();
+  });
+
+  nextBtn.addEventListener("click", async () => {
+    const nextPage = page + 1;
+
+    //  hämta flera sidor om det behövs tills nästa
+    if (!store.isSearching && activeChip === "popular") {
+      await ensurePopularCount(nextPage * perPage);
+      fullList = store.popularMovies;
     }
-  }
 
-// 7. Hantera klick på knapparna (Event Delegation)
-  container.addEventListener('click', async (e) => {
-    const target = e.target as HTMLElement;
-    const btn = target.closest('button');
-  })
+    page = nextPage;
+    render();
+    scrollToTop();
+  });
 
-  /* ---------- CLICK HANDLING ---------- */
+  // Save buttons
   container.addEventListener("click", async (e) => {
     const btn = (e.target as HTMLElement).closest("button");
     if (!btn || btn.disabled) return;
@@ -123,18 +289,16 @@ export default function home(): HTMLElement {
     const action = btn.dataset.action as "watchlist" | "watched" | undefined;
     if (!action) return;
 
-    const tmdbMovie = movies.find((m) => m.id === movieId);
+    const tmdbMovie = fullList.find((m) => m.id === movieId);
     if (!tmdbMovie) return;
 
     const existingDbMovie = findDbMovieByTmdbId(tmdbMovie.id);
 
-    // Om redan watched => gör inget
     if (existingDbMovie?.status === "watched") {
-      showToast("Filmen är redan Watched ✅");
+      showToast("Filmen är redan Watched");
       return;
     }
 
-    // UI feedback
     const originalText = btn.textContent ?? "";
     btn.textContent = "Sparar...";
     btn.disabled = true;
@@ -146,13 +310,12 @@ export default function home(): HTMLElement {
         existingDbMovie,
       });
 
-      // uppdatera savedMovies lokalt (ersätt eller lägg till)
       const idx = savedMovies.findIndex((m) => m.tmdb_id === updated.tmdb_id);
       if (idx >= 0) savedMovies[idx] = updated;
       else savedMovies = [updated, ...savedMovies];
 
       showToast(action === "watched" ? "Markerad som Watched ✅" : "Sparad i Watchlist ✔");
-      render();
+      buildFullListForCurrentView();
     } catch (err) {
       console.error(err);
       btn.disabled = false;
@@ -164,111 +327,69 @@ export default function home(): HTMLElement {
   return container;
 }
 
-
-
-/* =====================================
-   MOVIE CARD (DARK, SMART BUTTONS)
-   - Om dbMovie finns:
-       - status=watchlist => visa "Mark as watched" + disable watchlist-btn
-       - status=watched   => disable båda + visa "Watched ✅"
-   - Om dbMovie inte finns:
-       - båda aktiva
-===================================== */
 function createMovieCard(movie: TMDBMovie, dbMovie?: DatabaseMovie): HTMLElement {
   const card = document.createElement("article");
   card.className =
-    "group w-[170px] shrink-0 overflow-hidden rounded-2xl bg-zinc-900/60 ring-1 ring-white/10 hover:ring-white/20 transition";
+    "group overflow-hidden rounded-2xl bg-zinc-900/60 ring-1 ring-white/10 transition hover:ring-white/20";
 
   const imageUrl = movie.poster_path
     ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
     : "https://placehold.co/500x750?text=No+Image";
 
-  /* ---------- IMAGE ---------- */
-  const imageWrapper = document.createElement("div");
-  imageWrapper.className = "relative aspect-[2/3] w-full bg-zinc-800 animate-pulse";
-
-  const img = document.createElement("img");
-  img.src = imageUrl;
-  img.alt = movie.title;
-  img.loading = "lazy";
-  img.className =
-    "h-full w-full object-cover opacity-0 transition-opacity duration-500 group-hover:scale-[1.02]";
-
-  img.onload = () => {
-    imageWrapper.classList.remove("animate-pulse");
-    img.classList.remove("opacity-0");
-  };
-
-  imageWrapper.appendChild(img);
-
-  /* ---------- CONTENT ---------- */
-  const content = document.createElement("div");
-  content.className = "p-3 flex flex-col gap-2";
-
-  const rating = Number.isFinite(movie.vote_average) ? movie.vote_average.toFixed(1) : "-";
-  const release = movie.release_date ?? "";
-
-  // Button states
   const isSaved = !!dbMovie;
   const isWatchlist = dbMovie?.status === "watchlist";
   const isWatched = dbMovie?.status === "watched";
 
-  const watchlistDisabled = isSaved; // om den finns i db => blockera add igen (undvik 409)
-  const watchedDisabled = isWatched; // om watched => lås watched
+  const watchlistDisabled = isSaved;
+  const watchedDisabled = isWatched;
 
   const watchedLabel = isWatchlist ? "Mark as watched" : isWatched ? "Watched ✅" : "✓ Watched";
 
-  content.innerHTML = `
-    <h3 class="text-sm font-semibold text-white line-clamp-2">${movie.title}</h3>
+  const rating = Number.isFinite(movie.vote_average) ? movie.vote_average.toFixed(1) : "0.0";
+  const release = movie.release_date ?? "";
 
-    <p class="text-xs text-zinc-400">
-      ⭐ ${rating} ${release ? `• ${release}` : ""}
-    </p>
+  card.innerHTML = `
+    <div class="relative aspect-[2/3] bg-zinc-800">
+      <img src="${imageUrl}" alt="${movie.title}" loading="lazy"
+        class="h-full w-full object-cover opacity-0 transition duration-500 group-hover:scale-[1.03]" />
+      <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+      <div class="absolute left-3 top-3 rounded-full bg-black/60 px-2 py-1 text-[11px] text-white/80 ring-1 ring-white/10">
+        ⭐ ${rating}
+      </div>
+    </div>
 
-    <p class="text-xs text-zinc-300 line-clamp-3">
-      ${movie.overview || "Ingen beskrivning."}
-    </p>
+    <div class="p-3">
+      <h3 class="text-sm font-semibold text-white line-clamp-2">${movie.title}</h3>
+      <p class="mt-1 text-xs text-white/55">${release}</p>
 
-    <div class="mt-1 flex gap-2">
-      <button
-        data-id="${movie.id}"
-        data-action="watchlist"
-        ${watchlistDisabled ? "disabled" : ""}
-        class="flex-1 rounded-lg px-2 py-2 text-xs font-semibold transition
-          ${
-            watchlistDisabled
-              ? "bg-zinc-700 text-zinc-300 cursor-not-allowed"
-              : "bg-emerald-500 text-black hover:bg-emerald-400"
-          }"
-      >
-        ${isSaved ? "Saved" : "+ Watchlist"}
-      </button>
+      <div class="mt-3 flex gap-2">
+        <button
+          data-id="${movie.id}"
+          data-action="watchlist"
+          ${watchlistDisabled ? "disabled" : ""}
+          class="flex-1 rounded-xl px-2 py-2 text-xs font-semibold transition
+            ${watchlistDisabled ? "bg-white/10 text-white/50 cursor-not-allowed" : "bg-emerald-400 text-black hover:bg-emerald-300"}">
+          ${isSaved ? "Saved" : "+ Watchlist"}
+        </button>
 
-      <button
-        data-id="${movie.id}"
-        data-action="watched"
-        ${watchedDisabled ? "disabled" : ""}
-        class="flex-1 rounded-lg px-2 py-2 text-xs font-semibold transition
-          ${
-            watchedDisabled
-              ? "bg-zinc-700 text-zinc-300 cursor-not-allowed"
-              : "bg-amber-400 text-black hover:bg-amber-300"
-          }"
-      >
-        ${watchedLabel}
-      </button>
+        <button
+          data-id="${movie.id}"
+          data-action="watched"
+          ${watchedDisabled ? "disabled" : ""}
+          class="flex-1 rounded-xl px-2 py-2 text-xs font-semibold transition
+            ${watchedDisabled ? "bg-white/10 text-white/50 cursor-not-allowed" : "bg-amber-400 text-black hover:bg-amber-300"}">
+          ${watchedLabel}
+        </button>
+      </div>
     </div>
   `;
 
-  card.appendChild(imageWrapper);
-  card.appendChild(content);
+  const img = card.querySelector("img")!;
+  img.addEventListener("load", () => img.classList.remove("opacity-0"));
 
   return card;
 }
 
-/* =====================================
-   TOAST (DARK)
-===================================== */
 function showToast(message: string, success = true) {
   const toast = document.createElement("div");
   toast.className = `
