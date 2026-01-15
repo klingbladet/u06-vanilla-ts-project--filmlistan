@@ -1,6 +1,8 @@
 // API-anrop till TMDB API
 import type { TMDBMovie } from "../types/movie.ts";
 
+
+
 const API_KEY = '85a4b73dc7961b2d832676f9a6dab604';
 
 const BASE_URL = 'https://api.themoviedb.org/3';
@@ -28,3 +30,23 @@ export async function searchMoviesTMDB(query: string): Promise<TMDBMovie[]> {
     const data = await response.json();
     return data.results;
 }
+
+type TMDBGenre = {
+  id: number;
+  name: string;
+};
+
+export async function getGenre(): Promise<TMDBGenre[]> {
+  const response = await fetch(
+    `${BASE_URL}/genre/movie/list?api_key=${API_KEY}&language=en-US`
+  );
+
+  if (!response.ok) {
+    throw new Error(`Något blev fel: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.genres;
+}
+
+getGenre().then(genres => console.log(genres));

@@ -1,5 +1,10 @@
 export type MovieStatus = "watchlist" | "watched";
 
+export interface Genre {
+  id: number;
+  name: string;
+}
+
 export interface Movie {
   id: number;
   title: string;
@@ -7,6 +12,7 @@ export interface Movie {
   posterPath: string | null;
   releaseDate: string;
   voteAverage: number;
+  genres?: Genre[];
 }
 
 export interface TMDBMovie {
@@ -16,6 +22,7 @@ export interface TMDBMovie {
     poster_path: string | null;
     release_date: string;
     vote_average: number;
+    genre_ids: number[];
   }
   export interface DatabaseMovie {
     id: number;
@@ -31,6 +38,7 @@ export interface TMDBMovie {
     is_favorite: number;
     date_added: string;
     date_watched: string | null;
+    genres?: string; // Lagras som en kommaseparerad sträng av genre-namn
   }
 
   export interface CreateMovieBody {

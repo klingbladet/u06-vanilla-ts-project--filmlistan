@@ -1,40 +1,53 @@
-import type { TMDBMovie } from "../types/movie";
 import { store } from "../lib/store";
+import type { TMDBMovie } from "../types/movie";
 
-// Hämta inputfältet från SearchComponent
-const input = document.querySelector<HTMLInputElement>("input");
+import { getGenre } from "../services/tmdbApi";
 
-// Hämta container där filtrerade filmer ska visas
-const movieContainer = document.getElementById("movie-list") as HTMLUListElement;
+let moviesToFilter: TMDBMovie[] = store.isSearching ? store.searchResults : store.popularMovies;
 
-input?.addEventListener("input", () => {
-  const inputValue = input.value.toLowerCase();
 
-  // Filtrera filmer baserat på inputValue
-  const findInputValue = store.popularMovies.filter((movie: TMDBMovie) =>
-    movie.title.toLowerCase().includes(inputValue)
-  );
 
-  filterMovie(findInputValue);
+  const filterRow = document.createElement("div");
+  filterRow.className = "flex gap-4 mt-3 justify-center text-sm";
+
+  // Checkbox: Betyg ≥ 7
+  const ratingCheckbox = document.createElement("input");
+  ratingCheckbox.type = "checkbox";
+  ratingCheckbox.id = "ratingFilter";
+
+  const ratingLabel = document.createElement("label");
+  ratingLabel.htmlFor = "ratingFilter";
+  ratingLabel.textContent = "Betyg ≥ 7";
+
+  // Checkbox: Action
+  const actionCheckbox = document.createElement("input");
+  actionCheckbox.type = "checkbox";
+  actionCheckbox.id = "actionFilter";
+
+  const actionLabel = document.createElement("label");
+  actionLabel.htmlFor = "actionFilter";
+  actionLabel.textContent = "Action";
+
+  // Lägg till i raden
+  filterRow.appendChild(ratingCheckbox);
+  filterRow.appendChild(ratingLabel);
+  filterRow.appendChild(actionCheckbox);
+  filterRow.appendChild(actionLabel);
+
+
+ moviesToFilter.filter(movie => {
+  let pass = true;
+
+  // Exempel: Betyg ≥ 7
+  if (ratingCheckbox.checked) {
+    pass = pass && movie.vote_average >= 7;
+  }
+
+  // Exempel: Genre Action (om TMDBMovie hade genre info)
+  if (actionCheckbox.checked) {
+    pass = pass && movie.genre_ids?.includes(28); // 28 = Action i TMDB
+  }
+
+  return pass;
 });
 
-function filterMovie(listanMedAllaFilmer: TMDBMovie[]) {
-  if (!movieContainer) return;
-
-  // Rensa tidigare filmer
-  movieContainer.innerHTML = "";
-
-  listanMedAllaFilmer.forEach((movie: TMDBMovie) => {
-    const movieName = document.createElement("li");
-    const movieImage = document.createElement("img");
-
-    movieName.textContent = movie.title;
-    movieImage.src = movie.poster_path
-      ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-      : "";
-    movieImage.alt = movie.title;
-
-    movieName.appendChild(movieImage);
-    movieContainer.appendChild(movieName);
-  });
-}
