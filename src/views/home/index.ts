@@ -390,6 +390,23 @@ function createMovieCard(movie: TMDBMovie, dbMovie?: DatabaseMovie): HTMLElement
   const img = card.querySelector("img")!;
   img.addEventListener("load", () => img.classList.remove("opacity-0"));
 
+  card.addEventListener('click', (event) => {
+    // Om klicket var på en knapp inuti kortet, gör ingenting.
+    if ((event.target as HTMLElement).closest('button')) {
+      return;
+    }
+
+    // 1. Skapa modalen för den här specifika filmen
+    const { modal, openModal } = createMovieModal(movie);
+
+    // 2. Lägg till modalen i dokumentet
+    document.body.appendChild(modal);
+
+      // 3. Öppna modalen
+    openModal();
+  });
+
+
   return card;
 }
 
