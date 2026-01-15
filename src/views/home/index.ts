@@ -1,7 +1,9 @@
-import type { TMDBMovie, DatabaseMovie } from "../../types/movie";
+import type { TMDBMovie, DatabaseMovie, Genre } from "../../types/movie";
 import { store, loadPopularMovies } from "../../lib/store";
 import { SearchComponent } from "../../components/search";
 import { getMovies, upsertMovieStatusByTmdbId } from "../../services/movieApi";
+import { getGenres } from '../../services/tmdbApi';
+import { createFilterComponent } from '../../components/filter';
 
 /* =====================================
    HOME VIEW (IMDB-LIKE)
@@ -44,6 +46,25 @@ export default function home(): HTMLElement {
   searchWrap.appendChild(SearchComponent());
   inner.appendChild(searchWrap);
 
+  // Skapa en temporär placeholder för filtren som visas medan de laddas
+  const filterContainerPlaceholder = document.createElement('div');
+  filterContainerPlaceholder.className = "mt-6 text-center text-zinc-400"; // Lägg till lite stil
+  filterContainerPlaceholder.textContent = 'Laddar filter...';
+  inner.appendChild(filterContainerPlaceholder); // Lägg till placeholder på sidan
+
+  // Hämta genrerna och, när de är klara, skapa och visa filter-komponenten
+  getGenres()
+    .then(genres => {
+      allGenres = genres; // Spara genrerna i din allGenres-variabel
+      const filterUI = createFilterComponent(allGenres); // Skapa filter-UI med de hämtade genrerna
+      filterContainerPlaceholder.replaceWith(filterUI); // Ersätt placeholder med det riktiga filter-UI:et
+    })
+    .catch(error => {
+      console.error("Kunde inte ladda genrer:", error);
+      filterContainerPlaceholder.textContent = 'Kunde inte ladda filter.'; // Visa felmeddelande om det misslyckas
+    });
+
+
   /* ---------- HEADING ---------- */
   const heading = document.createElement("h2");
   heading.className = "mt-10 flex items-center gap-3 text-xl md:text-2xl font-bold";
@@ -57,6 +78,7 @@ export default function home(): HTMLElement {
 
   let movies: TMDBMovie[] = [];
   let savedMovies: DatabaseMovie[] = [];
+  let allGenres: Genre[] = [];
 
   const findDbMovieByTmdbId = (tmdbId: number) =>
     savedMovies.find((m) => m.tmdb_id === tmdbId);

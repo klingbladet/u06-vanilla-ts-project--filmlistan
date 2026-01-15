@@ -1,16 +1,12 @@
-import { store } from "../lib/store";
-import type { TMDBMovie } from "../types/movie";
+// src/components/filter.ts
+import type { Genre } from '../types/movie';
 
-import { getGenre } from "../services/tmdbApi";
+export function createFilterComponent(genres: Genre[]): HTMLElement {
+  // 1. Skapa en container för alla filter
+  const filterContainer = document.createElement('div');
+  filterContainer.className = 'flex gap-4 mt-3 justify-center text-sm';
 
-let moviesToFilter: TMDBMovie[] = store.isSearching ? store.searchResults : store.popularMovies;
-
-
-
-  const filterRow = document.createElement("div");
-  filterRow.className = "flex gap-4 mt-3 justify-center text-sm";
-
-  // Checkbox: Betyg ≥ 7
+  // 2. Skapa checkbox och label för betyg
   const ratingCheckbox = document.createElement("input");
   ratingCheckbox.type = "checkbox";
   ratingCheckbox.id = "ratingFilter";
@@ -19,35 +15,27 @@ let moviesToFilter: TMDBMovie[] = store.isSearching ? store.searchResults : stor
   ratingLabel.htmlFor = "ratingFilter";
   ratingLabel.textContent = "Betyg ≥ 7";
 
-  // Checkbox: Action
-  const actionCheckbox = document.createElement("input");
-  actionCheckbox.type = "checkbox";
-  actionCheckbox.id = "actionFilter";
+  // 3. Lägg till dem i containern
+  filterContainer.appendChild(ratingCheckbox);
+  filterContainer.appendChild(ratingLabel);
 
-  const actionLabel = document.createElement("label");
-  actionLabel.htmlFor = "actionFilter";
-  actionLabel.textContent = "Action";
+  // HÄR LÄGGS KOD FÖR GENRE-FILTREN TILL
+  genres.forEach(genre => {
+    // 1. Skapa en checkbox för den aktuella genren
+    const genreCheckbox = document.createElement("input");
+    genreCheckbox.type = "checkbox";
+    genreCheckbox.id = `genre-${genre.id}`; // Ge den ett unikt ID baserat på genrens ID
 
-  // Lägg till i raden
-  filterRow.appendChild(ratingCheckbox);
-  filterRow.appendChild(ratingLabel);
-  filterRow.appendChild(actionCheckbox);
-  filterRow.appendChild(actionLabel);
+    // 2. Skapa en label för den aktuella genren
+    const genreLabel = document.createElement("label");
+    genreLabel.htmlFor = `genre-${genre.id}`;
+    genreLabel.textContent = genre.name; // Visa genrens namn
 
+    // 3. Lägg till checkboxen och labeln i din filterContainer
+    filterContainer.appendChild(genreCheckbox);
+    filterContainer.appendChild(genreLabel);
+  });
 
- moviesToFilter.filter(movie => {
-  let pass = true;
-
-  // Exempel: Betyg ≥ 7
-  if (ratingCheckbox.checked) {
-    pass = pass && movie.vote_average >= 7;
-  }
-
-  // Exempel: Genre Action (om TMDBMovie hade genre info)
-  if (actionCheckbox.checked) {
-    pass = pass && movie.genre_ids?.includes(28); // 28 = Action i TMDB
-  }
-
-  return pass;
-});
-
+  // Sist, returnera den färdiga containern
+  return filterContainer;
+}
