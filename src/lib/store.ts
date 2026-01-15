@@ -6,19 +6,43 @@ class Store {
 
   // TMDB API state
   popularMovies: TMDBMovie[] = []; 
-  searchResults: TMDBMovie[] = []; // Här hamnar filmerna vi sökt fram
-  isSearching: boolean = false;    // Är vi i "sökläge" just nu
-  currentSearchQuery: string = ""; // Vad vi sökte på
+  searchResults: TMDBMovie[] = [];
+  isSearching: boolean = false;
+  currentSearchQuery: string = "";
+
+  // State för filter-inställningar
+  activeFilters = {
+    rating: false,
+    genres: [] as number[]
+  }
+
+  // Getter som alltid returnerar den filtrerade listan
+  get filteredMovies(): TMDBMovie[] {
+    const moviesToFilter = this.isSearching ? this.searchResults : this.popularMovies;
+
+    // Applicera betygsfilter
+    let filtered = this.activeFilters.rating
+      ? moviesToFilter.filter(movie => movie.vote_average >= 7)
+      : moviesToFilter;
+
+    // Applicera genrefilter
+    if (this.activeFilters.genres.length > 0) {
+      filtered = filtered.filter(movie => 
+        Array.isArray(movie.genre_ids) && movie.genre_ids.some(id => this.activeFilters.genres.includes(id))
+      );
+    }
+
+    return filtered;
+  }
 
   constructor() {
     this.renderCallback = () => {};
   }
 
-  // Här är vår nya sökfunktion
+  // Sökfunktion
   async searchMovies(query: string) {
     this.currentSearchQuery = query;
 
-    // Om vi suddar ut texten i rutan, gå tillbaka till startsidan
     if (!query.trim()) {
       this.isSearching = false;
       this.searchResults = [];
@@ -26,17 +50,36 @@ class Store {
       return;
     }
 
-    this.isSearching = true; // Nu tänder vi lampan: vi söker!
+    this.isSearching = true;
     try {
-      // HÄR VAR FELET: Vi lägger filmerna i searchResults (lådan), inte isSearching (lampan)
       this.searchResults = await searchMoviesTMDB(query); 
       this.triggerRender();
     }
     catch (error) {
       console.error("Det gick inte att söka;", error);
-      this.searchResults = []; // om det blir fel töm listan
+      this.searchResults = [];
       this.triggerRender();
     }
+  }
+
+  // Metod för att slå på/av betygsfiltret
+  toggleRatingFilter(isActive: boolean) {
+    this.activeFilters.rating = isActive;
+    this.triggerRender();
+  }
+
+  // Metod för att slå på/av ett genrefilter
+  toggleGenreFilter(genreId: number) {
+    const { genres } = this.activeFilters;
+    const index = genres.indexOf(genreId);
+
+    if (index === -1) {
+      genres.push(genreId);
+    } else {
+      genres.splice(index, 1);
+    }
+
+    this.triggerRender();
   }
 
   async loadPopularMovies(shouldTriggerRender: boolean = true) {
@@ -53,7 +96,6 @@ class Store {
     }
   }
 
-
   // ========== RENDER CALLBACK ==========
   
   setRenderCallback(renderApp: () => void) {
@@ -65,12 +107,14 @@ class Store {
       this.renderCallback();
     }
   }
-} // <--- Här stänger vi huset (klassen) nu!
+}
 
 const store = new Store();
 
 export { store };
 
-export const loadPopularMovies = store.loadPopularMovies.bind(store);  // Async
+export const loadPopularMovies = store.loadPopularMovies.bind(store);
 export const setRenderCallback = store.setRenderCallback.bind(store);
 export const searchMovies = store.searchMovies.bind(store);
+export const toggleRatingFilter = store.toggleRatingFilter.bind(store);
+export const toggleGenreFilter = store.toggleGenreFilter.bind(store);

@@ -1,5 +1,6 @@
 // src/components/filter.ts
 import type { Genre } from '../types/movie';
+import { toggleRatingFilter, toggleGenreFilter } from '../lib/store';
 
 export function createFilterComponent(genres: Genre[]): HTMLElement {
   // 1. Skapa en container för alla filter
@@ -11,6 +12,10 @@ export function createFilterComponent(genres: Genre[]): HTMLElement {
   ratingCheckbox.type = "checkbox";
   ratingCheckbox.id = "ratingFilter";
 
+  ratingCheckbox.addEventListener("change", () => {
+    toggleRatingFilter(ratingCheckbox.checked);
+  })
+
   const ratingLabel = document.createElement("label");
   ratingLabel.htmlFor = "ratingFilter";
   ratingLabel.textContent = "Betyg ≥ 7";
@@ -19,22 +24,22 @@ export function createFilterComponent(genres: Genre[]): HTMLElement {
   filterContainer.appendChild(ratingCheckbox);
   filterContainer.appendChild(ratingLabel);
 
-  // HÄR LÄGGS KOD FÖR GENRE-FILTREN TILL
+  // TODO: Här ska vi senare loopa igenom 'genres' och skapa fler checkboxar.
   genres.forEach(genre => {
-    // 1. Skapa en checkbox för den aktuella genren
-    const genreCheckbox = document.createElement("input");
-    genreCheckbox.type = "checkbox";
-    genreCheckbox.id = `genre-${genre.id}`; // Ge den ett unikt ID baserat på genrens ID
+    const genreCheckBox = document.createElement("input");
+    genreCheckBox.type = "checkbox";
+    genreCheckBox.id = `genre-${genre.id}`;
 
-    // 2. Skapa en label för den aktuella genren
+    genreCheckBox.addEventListener("change", () => {
+      toggleGenreFilter(genre.id);
+    })
     const genreLabel = document.createElement("label");
     genreLabel.htmlFor = `genre-${genre.id}`;
-    genreLabel.textContent = genre.name; // Visa genrens namn
+    genreLabel.textContent = genre.name;
 
-    // 3. Lägg till checkboxen och labeln i din filterContainer
-    filterContainer.appendChild(genreCheckbox);
+    filterContainer.appendChild(genreCheckBox);
     filterContainer.appendChild(genreLabel);
-  });
+  })
 
   // Sist, returnera den färdiga containern
   return filterContainer;

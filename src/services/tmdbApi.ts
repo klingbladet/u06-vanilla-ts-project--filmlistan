@@ -36,7 +36,7 @@ type TMDBGenre = {
   name: string;
 };
 
-export async function getGenre(): Promise<TMDBGenre[]> {
+export async function getGenres(): Promise<TMDBGenre[]> {
   const response = await fetch(
     `${BASE_URL}/genre/movie/list?api_key=${API_KEY}&language=en-US`
   );
@@ -49,4 +49,4 @@ export async function getGenre(): Promise<TMDBGenre[]> {
   return data.genres;
 }
 
-getGenre().then(genres => console.log(genres));
+getGenres().then(genres => console.log(genres));
