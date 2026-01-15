@@ -46,3 +46,10 @@ export interface TMDBMovie {
     is_favorite?: boolean;
     date_watched?: string | null;
   }
+
+  //Detta är filmer med en poängsumma som vi använder för uträkningen för algoritmens rekommendation 
+  export interface WeightedMovie extends DatabaseMovie {
+    weight: number;
+  }
+
+  //
