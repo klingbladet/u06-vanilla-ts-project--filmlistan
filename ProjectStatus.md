@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a **two-tier architecture** app: the backend (Express API + SQLite) is fully functional with all CRUD operations ready. The frontend is ~55% complete - core browsing and watchlist work, watched list is implemented, but movie details and reviews are still missing.
+This is a **two-tier architecture** app: the backend (Express API + SQLite) is fully functional with all CRUD operations ready. The frontend is ~75% complete - core browsing, watchlist, and watched lists are fully functional including moving/deleting movies.
 
 ---
 
@@ -38,13 +38,13 @@ This is a **two-tier architecture** app: the backend (Express API + SQLite) is f
 
 ---
 
-## 🔌 API Integration - ✅ **90% Complete**
+## 🔌 API Integration - ✅ **95% Complete**
 
 | Status | Feature | File | Notes |
 |--------|---------|------|-------|
 | ✅ | TMDB API config | `src/services/tmdbApi.ts` | Get popular, search |
-| ✅ | Backend GET movies | `src/services/movieApi.ts:11` | ✅ Working |
-| ✅ | Backend POST movie | `src/services/movieApi.ts:21` | ✅ Working |
+| ✅ | Backend GET movies | `src/services/movieApi.ts` | ✅ Working |
+| ✅ | Backend POST movie | `src/services/movieApi.ts` | ✅ Working |
 | ✅ | Backend PUT movie | `src/services/movieApi.ts` | ✅ Working |
 | ✅ | Backend DELETE movie | `src/services/movieApi.ts` | ✅ Working |
 | ❌ | Backend GET stats | Missing | **Need to add** |
@@ -52,13 +52,13 @@ This is a **two-tier architecture** app: the backend (Express API + SQLite) is f
 
 ---
 
-## 📱 Views & Pages - ⚠️ **65% Complete**
+## 📱 Views & Pages - ⚠️ **70% Complete**
 
 | Status | View | File | Features |
 |--------|------|------|----------|
 | ✅ | Home / Browse | `src/views/home/index.ts` | Popular movies, search, grid display |
 | ✅ | Search Component | `src/components/search.ts` | Real-time search |
-| ✅ | Watchlist | `src/views/watchlist/index.ts` | Display watchlist |
+| ✅ | Watchlist | `src/views/watchlist/index.ts` | List, Move to Watched, Delete, Clear All |
 | ✅ | Watched Movies | `src/views/watched/index.ts` | Display watched history |
 | ⚠️ | About | `src/views/about/index.ts` | Demo page (not functional) |
 | ❌ | **Movie Detail** | **Missing** | **Need to create** |
@@ -66,7 +66,7 @@ This is a **two-tier architecture** app: the backend (Express API + SQLite) is f
 
 ---
 
-## ✨ Core Features - ⚠️ **55% Complete**
+## ✨ Core Features - ⚠️ **65% Complete**
 
 ### Browse & Discovery - ✅ **90% Complete**
 
@@ -79,27 +79,28 @@ This is a **two-tier architecture** app: the backend (Express API + SQLite) is f
 | ⚠️ | Loading states | Basic (could improve) |
 | ⚠️ | Empty states | Basic messages only |
 
-### Watchlist Management - ⚠️ **40% Complete**
+### Watchlist Management - ✅ **90% Complete**
 
 | Status | Feature | Notes |
 |--------|---------|-------|
 | ✅ | Add to watchlist | Button on home page |
 | ✅ | View watchlist | Working |
+| ✅ | **Remove from watchlist** | Working |
+| ✅ | **Move to watched** | Working |
+| ✅ | **Clear all** | Working |
 | ⚠️ | Button state feedback | Shows "Sparad!" but doesn't disable permanently |
-| ❌ | **Remove from watchlist** | **UI Missing** (API ready) |
-| ❌ | **Move to watched** | **UI Missing** (API ready) |
 | ❌ | **Duplicate prevention UI** | Backend handles, but no UX feedback |
 
-### Watched Movies - ⚠️ **30% Complete**
+### Watched Movies - ⚠️ **40% Complete**
 
 | Status | Feature | Status |
 |--------|---------|--------|
 | ✅ | **Watched movies view** | **Basic grid implemented** |
-| ❌ | **Mark as watched (from watchlist)** | **No UI** |
+| ✅ | **Mark as watched (from watchlist)** | **Done** |
 | ❌ | **Add rating (1-5 stars)** | **Not implemented** |
 | ❌ | **Write review** | **Not implemented** |
 | ❌ | **Edit rating/review** | **Not implemented** |
-| ❌ | **View watched date** | **Displayed in card** |
+| ✅ | **View watched date** | **Displayed in card** |
 
 ### Advanced Features - ❌ **0% Complete**
 
@@ -118,10 +119,10 @@ This is a **two-tier architecture** app: the backend (Express API + SQLite) is f
 
 ### 🚨 Critical (Must Have)
 
-1. **Movie Actions on Watchlist**
-   - "Mark as Watched" button on watchlist cards
-   - "Remove" button
-   - Modal/form for rating & review
+1. **Movie Detail Page** (`src/views/detail/index.ts`)
+   - Full movie info from TMDB
+   - Display personal rating/review if watched
+   - Edit/delete actions
 
 2. **Rating Component**
    - Interactive 5-star selector
@@ -131,31 +132,26 @@ This is a **two-tier architecture** app: the backend (Express API + SQLite) is f
    - Text area for personal review
    - Used with rating
 
-4. **Movie Detail Page** (`src/views/detail/index.ts`)
-   - Full movie info from TMDB
-   - Display personal rating/review if watched
-   - Edit/delete actions
-
 ### 🔶 Important (Should Have)
 
-5. **Better Error Handling**
+4. **Better Error Handling**
    - Toast notifications for success/errors
    - Graceful degradation
 
-6. **User Statistics Dashboard**
+5. **User Statistics Dashboard**
    - Total movies, avg rating, favorites count
 
 ### 🟢 Nice to Have (Optional)
 
-7. **Favorites System**
+6. **Favorites System**
    - Toggle favorite on any movie
    - Filter to show only favorites
 
-8. **Sort & Filter**
+7. **Sort & Filter**
    - Sort by: date added, rating, title, year
    - Filter by: genre, year range, rating
 
-9. **Responsive Design Polish**
+8. **Responsive Design Polish**
    - Mobile menu
    - Touch-friendly buttons
    - Better mobile grid
@@ -166,23 +162,21 @@ This is a **two-tier architecture** app: the backend (Express API + SQLite) is f
 
 ```
 Backend:     ████████████████████ 100% ✅
-API Layer:   ██████████████████░░  90% ✅
-Views:       █████████████░░░░░░░  65% ⚠️
-Features:    ███████████░░░░░░░░░  55% ⚠️
+API Layer:   ███████████████████░  95% ✅
+Views:       ██████████████░░░░░░  70% ⚠️
+Features:    █████████████░░░░░░░  65% ⚠️
 -------------------------------------------
-TOTAL:       ██████████████░░░░░░  70% 🚧
+TOTAL:       ███████████████░░░░░  75% 🚧
 ```
 
 ---
 
 ## 🎓 Recommended Implementation Order
 
-1. **Add "Mark as Watched" button to watchlist** (20 min)
+1. **Create Movie Detail Page** (45 min)
 2. **Build Rating Component** (15 min)
 3. **Build Review Form** (15 min)
-4. **Add Delete functionality to Watchlist/Watched** (15 min)
-5. **Create Movie Detail Page** (45 min)
-6. **Polish UI/UX** (ongoing)
+4. **Polish UI/UX** (ongoing)
 
 ---
 
@@ -225,5 +219,5 @@ headers: {
 ---
 
 **Last Updated**: January 10, 2026
-**Project Phase**: Development (70% complete)
-**Next Milestone**: Movie Actions (Rate/Review/Delete)
+**Project Phase**: Development (75% complete)
+**Next Milestone**: Movie Detail Page

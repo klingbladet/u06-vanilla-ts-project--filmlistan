@@ -47,9 +47,12 @@ export interface TMDBMovie {
     poster_path: string;
     release_date: string;
     overview?: string;
+    
     status: MovieStatus;
+    vote_average: number;
     personal_rating?: number | null
     review?: string | null;
     is_favorite?: boolean;
     date_watched?: string | null;
+
   }
