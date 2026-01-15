@@ -108,7 +108,11 @@ export default function home(): HTMLElement {
     }
   }
 
-  render();
+// 7. Hantera klick på knapparna (Event Delegation)
+  container.addEventListener('click', async (e) => {
+    const target = e.target as HTMLElement;
+    const btn = target.closest('button');
+  })
 
   /* ---------- CLICK HANDLING ---------- */
   container.addEventListener("click", async (e) => {
@@ -159,6 +163,8 @@ export default function home(): HTMLElement {
 
   return container;
 }
+
+
 
 /* =====================================
    MOVIE CARD (DARK, SMART BUTTONS)
