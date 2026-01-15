@@ -1,6 +1,21 @@
-footer {
-  background-color: var(--color-primary);
-  color: var(--color-text-inverse);
-  padding: var(--spacing-md);
+.site-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(9, 9, 11, 0.75);
+  backdrop-filter: blur(10px);
 }
 
+.footer-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 22px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.footer-text {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 13px;
+  letter-spacing: 0.2px;
+}

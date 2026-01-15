@@ -1,40 +1,106 @@
 import type { TMDBMovie, DatabaseMovie } from "../../types/movie";
 import { store, loadPopularMovies } from "../../lib/store";
 import { SearchComponent } from "../../components/search";
-import { addMovie, getMovies } from "../../services/movieApi";
+import { getMovies, upsertMovieStatusByTmdbId } from "../../services/movieApi";
 
 /* =====================================
-   HOME VIEW
+   HOME VIEW (IMDB-LIKE)
 ===================================== */
 export default function home(): HTMLElement {
   const container = document.createElement("div");
-  container.className = "max-w-7xl mx-auto p-6";
+  container.className = "min-h-screen bg-zinc-950 text-white";
 
-  container.appendChild(SearchComponent());
+  const inner = document.createElement("div");
+  inner.className = "max-w-7xl mx-auto px-4 py-6";
+  container.appendChild(inner);
 
+  /* ---------- HERO ---------- */
+  const hero = document.createElement("section");
+  hero.className =
+    "relative overflow-hidden rounded-2xl bg-gradient-to-r from-zinc-900 via-zinc-950 to-zinc-900 ring-1 ring-white/10";
+  hero.innerHTML = `
+    <div class="p-6 md:p-10">
+      <div class="inline-flex items-center gap-2 rounded-lg bg-amber-400 px-3 py-1 text-xs font-extrabold tracking-wide text-black">
+       FILMKOLLEN
+      </div>
+
+
+      <h1 class="mt-4 text-3xl md:text-5xl font-extrabold tracking-tight">
+        Hitta något att titta på.
+        <span class="text-amber-400">Spara</span> dina favoriter.
+      </h1>
+
+
+      <p class="mt-3 max-w-2xl text-zinc-300">
+        Sök bland populära filmer och markera dem som watched.
+      </p>
+    </div>
+  `;
+  inner.appendChild(hero);
+
+  /* ---------- SEARCH ---------- */
+  const searchWrap = document.createElement("div");
+  searchWrap.className = "mt-6";
+  searchWrap.appendChild(SearchComponent());
+  inner.appendChild(searchWrap);
+
+  /* ---------- HEADING ---------- */
   const heading = document.createElement("h2");
-  heading.className = "text-3xl font-bold text-center my-8";
-  container.appendChild(heading);
+  heading.className = "mt-10 flex items-center gap-3 text-xl md:text-2xl font-bold";
+  inner.appendChild(heading);
 
-  const grid = document.createElement("div");
-  grid.className =
-    "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6";
-  container.appendChild(grid);
+  /* ---------- MOVIE ROW (IMDB SCROLL) ---------- */
+  const row = document.createElement("div");
+  row.className =
+    "mt-6 flex gap-4 overflow-x-auto pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+  inner.appendChild(row);
 
   let movies: TMDBMovie[] = [];
   let savedMovies: DatabaseMovie[] = [];
 
-  /* ===== LOAD SAVED MOVIES (ONCE) ===== */
-  getMovies().then((dbMovies) => {
-    savedMovies = dbMovies;
-  });
+  const findDbMovieByTmdbId = (tmdbId: number) =>
+    savedMovies.find((m) => m.tmdb_id === tmdbId);
 
-  /* ===== DECIDE WHAT TO SHOW ===== */
+  const render = () => {
+    row.innerHTML = "";
+
+    if (movies.length === 0) {
+      row.innerHTML = `
+        <div class="w-full text-center text-zinc-400 py-10">
+          Laddar filmer...
+        </div>`;
+      return;
+    }
+
+    movies.forEach((m) => {
+      const dbMovie = findDbMovieByTmdbId(m.id);
+      row.appendChild(createMovieCard(m, dbMovie));
+    });
+  };
+
+  /* ---------- LOAD SAVED MOVIES ---------- */
+  getMovies()
+    .then((dbMovies) => {
+      savedMovies = dbMovies;
+      render();
+    })
+    .catch(() => {
+      // om backend failar, rendera ändå
+      render();
+    });
+
+  /* ---------- DECIDE WHAT TO SHOW ---------- */
   if (store.isSearching) {
-    heading.textContent = `Resultat för "${store.currentSearchQuery}"`;
+    heading.innerHTML = `
+      <span class="h-6 w-1 rounded bg-amber-400"></span>
+      <span>Resultat för "${store.currentSearchQuery}"</span>
+    `;
     movies = store.searchResults;
   } else {
-    heading.textContent = " Populära filmer";
+    heading.innerHTML = `
+      <span class="h-6 w-1 rounded bg-amber-400"></span>
+      <span>Populära filmer</span>
+    `;
     movies = store.popularMovies;
 
     if (movies.length === 0) {
@@ -42,53 +108,51 @@ export default function home(): HTMLElement {
     }
   }
 
-  if (movies.length === 0) {
-    grid.innerHTML = `
-      <p class="col-span-full text-center text-gray-500">
-        Laddar filmer...
-      </p>`;
-  }
+  render();
 
-  movies.forEach((movie) => {
-    const alreadySaved = savedMovies.some(
-      (m) => m.tmdb_id === movie.id
-    );
-    grid.appendChild(createMovieCard(movie, alreadySaved));
-  });
-
-  /* ===== BUTTON HANDLING ===== */
+  /* ---------- CLICK HANDLING ---------- */
   container.addEventListener("click", async (e) => {
     const btn = (e.target as HTMLElement).closest("button");
     if (!btn || btn.disabled) return;
 
     const movieId = Number(btn.dataset.id);
-    const action = btn.dataset.action;
+    const action = btn.dataset.action as "watchlist" | "watched" | undefined;
+    if (!action) return;
 
-    const movie = movies.find((m) => m.id === movieId);
-    if (!movie) return;
+    const tmdbMovie = movies.find((m) => m.id === movieId);
+    if (!tmdbMovie) return;
 
+    const existingDbMovie = findDbMovieByTmdbId(tmdbMovie.id);
+
+    // Om redan watched => gör inget
+    if (existingDbMovie?.status === "watched") {
+      showToast("Filmen är redan Watched ✅");
+      return;
+    }
+
+    // UI feedback
+    const originalText = btn.textContent ?? "";
     btn.textContent = "Sparar...";
     btn.disabled = true;
 
     try {
-      await addMovie({
-        tmdb_id: movie.id,
-        title: movie.title,
-        poster_path: movie.poster_path ?? "",
-        release_date: movie.release_date ?? "",
-        overview: movie.overview,
-        status: action === "watchlist" ? "watchlist" : "watched",
+      const updated = await upsertMovieStatusByTmdbId({
+        tmdbMovie,
+        status: action,
+        existingDbMovie,
       });
 
-      btn.textContent = "✔ Klar";
-      btn.className =
-        "flex-1 bg-gray-400 text-white text-sm py-2 rounded cursor-not-allowed";
+      // uppdatera savedMovies lokalt (ersätt eller lägg till)
+      const idx = savedMovies.findIndex((m) => m.tmdb_id === updated.tmdb_id);
+      if (idx >= 0) savedMovies[idx] = updated;
+      else savedMovies = [updated, ...savedMovies];
 
-      showToast("Filmen sparades ✔");
-
-    } catch (error) {
-      btn.textContent = "Fel";
+      showToast(action === "watched" ? "Markerad som Watched ✅" : "Sparad i Watchlist ✔");
+      render();
+    } catch (err) {
+      console.error(err);
       btn.disabled = false;
+      btn.textContent = originalText;
       showToast("Något gick fel", false);
     }
   });
@@ -97,28 +161,32 @@ export default function home(): HTMLElement {
 }
 
 /* =====================================
-   MOVIE CARD
+   MOVIE CARD (DARK, SMART BUTTONS)
+   - Om dbMovie finns:
+       - status=watchlist => visa "Mark as watched" + disable watchlist-btn
+       - status=watched   => disable båda + visa "Watched ✅"
+   - Om dbMovie inte finns:
+       - båda aktiva
 ===================================== */
-function createMovieCard(movie: TMDBMovie, disabled: boolean): HTMLElement {
-  const card = document.createElement("div");
+function createMovieCard(movie: TMDBMovie, dbMovie?: DatabaseMovie): HTMLElement {
+  const card = document.createElement("article");
   card.className =
-    "bg-white rounded-xl shadow hover:shadow-lg transition flex flex-col overflow-hidden";
+    "group w-[170px] shrink-0 overflow-hidden rounded-2xl bg-zinc-900/60 ring-1 ring-white/10 hover:ring-white/20 transition";
 
   const imageUrl = movie.poster_path
     ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
     : "https://placehold.co/500x750?text=No+Image";
 
-  /* ===== IMAGE WITH SKELETON ===== */
+  /* ---------- IMAGE ---------- */
   const imageWrapper = document.createElement("div");
-  imageWrapper.className =
-    "relative w-full h-72 bg-gray-200 animate-pulse";
+  imageWrapper.className = "relative aspect-[2/3] w-full bg-zinc-800 animate-pulse";
 
   const img = document.createElement("img");
   img.src = imageUrl;
   img.alt = movie.title;
   img.loading = "lazy";
   img.className =
-    "w-full h-full object-cover opacity-0 transition-opacity duration-500";
+    "h-full w-full object-cover opacity-0 transition-opacity duration-500 group-hover:scale-[1.02]";
 
   img.onload = () => {
     imageWrapper.classList.remove("animate-pulse");
@@ -127,42 +195,61 @@ function createMovieCard(movie: TMDBMovie, disabled: boolean): HTMLElement {
 
   imageWrapper.appendChild(img);
 
-  /* ===== CONTENT ===== */
+  /* ---------- CONTENT ---------- */
   const content = document.createElement("div");
-  content.className = "p-4 flex flex-col flex-1";
+  content.className = "p-3 flex flex-col gap-2";
+
+  const rating = Number.isFinite(movie.vote_average) ? movie.vote_average.toFixed(1) : "-";
+  const release = movie.release_date ?? "";
+
+  // Button states
+  const isSaved = !!dbMovie;
+  const isWatchlist = dbMovie?.status === "watchlist";
+  const isWatched = dbMovie?.status === "watched";
+
+  const watchlistDisabled = isSaved; // om den finns i db => blockera add igen (undvik 409)
+  const watchedDisabled = isWatched; // om watched => lås watched
+
+  const watchedLabel = isWatchlist ? "Mark as watched" : isWatched ? "Watched ✅" : "✓ Watched";
 
   content.innerHTML = `
-    <h3 class="font-bold text-lg mb-1">${movie.title}</h3>
-    <p class="text-sm text-gray-500 mb-2">
-       ${movie.vote_average.toFixed(1)}
+    <h3 class="text-sm font-semibold text-white line-clamp-2">${movie.title}</h3>
+
+    <p class="text-xs text-zinc-400">
+      ⭐ ${rating} ${release ? `• ${release}` : ""}
     </p>
-    <p class="text-sm text-gray-600 line-clamp-3 mb-4">
+
+    <p class="text-xs text-zinc-300 line-clamp-3">
       ${movie.overview || "Ingen beskrivning."}
     </p>
 
-    <div class="flex gap-2 mt-auto">
+    <div class="mt-1 flex gap-2">
       <button
         data-id="${movie.id}"
         data-action="watchlist"
-        ${disabled ? "disabled" : ""}
-        class="flex-1 ${
-          disabled
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-green-600 hover:bg-green-700"
-        } text-white text-sm py-2 rounded">
-        + Watchlist
+        ${watchlistDisabled ? "disabled" : ""}
+        class="flex-1 rounded-lg px-2 py-2 text-xs font-semibold transition
+          ${
+            watchlistDisabled
+              ? "bg-zinc-700 text-zinc-300 cursor-not-allowed"
+              : "bg-emerald-500 text-black hover:bg-emerald-400"
+          }"
+      >
+        ${isSaved ? "Saved" : "+ Watchlist"}
       </button>
 
       <button
         data-id="${movie.id}"
         data-action="watched"
-        ${disabled ? "disabled" : ""}
-        class="flex-1 ${
-          disabled
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700"
-        } text-white text-sm py-2 rounded">
-        ✓ Watched
+        ${watchedDisabled ? "disabled" : ""}
+        class="flex-1 rounded-lg px-2 py-2 text-xs font-semibold transition
+          ${
+            watchedDisabled
+              ? "bg-zinc-700 text-zinc-300 cursor-not-allowed"
+              : "bg-amber-400 text-black hover:bg-amber-300"
+          }"
+      >
+        ${watchedLabel}
       </button>
     </div>
   `;
@@ -174,18 +261,17 @@ function createMovieCard(movie: TMDBMovie, disabled: boolean): HTMLElement {
 }
 
 /* =====================================
-   TOAST
+   TOAST (DARK)
 ===================================== */
 function showToast(message: string, success = true) {
   const toast = document.createElement("div");
   toast.className = `
-    fixed bottom-6 right-6 px-4 py-3 rounded shadow-lg text-white z-50
-    ${success ? "bg-green-600" : "bg-red-600"}
+    fixed bottom-6 right-6 px-4 py-3 rounded-xl shadow-lg text-sm z-50
+    ring-1 ring-white/10
+    ${success ? "bg-emerald-500 text-black" : "bg-rose-500 text-white"}
   `;
   toast.textContent = message;
 
   document.body.appendChild(toast);
-
   setTimeout(() => toast.remove(), 3000);
 }
-
