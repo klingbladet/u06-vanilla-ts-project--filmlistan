@@ -2,6 +2,7 @@ import type { TMDBMovie } from "../../types/movie";
 import { store, loadPopularMovies } from "../../lib/store";
 import { SearchComponent } from "../../components/search";
 import { addMovie } from "../../services/movieApi";
+import createMovieModal from "../../components/Modal";
 
 export default function home(): HTMLElement {
   const container = document.createElement("div");
@@ -48,10 +49,12 @@ export default function home(): HTMLElement {
       : "Laddar populära filmer...";
     grid.appendChild(message);
   } else {
-    // 6. Rita ut varje filmkort från den lista vi valde
+    // 6. Rita ut varje filmkort från den lista vi valde med en eventListener för modal
     moviesToShow.forEach((movie: TMDBMovie) => {
       const card = document.createElement("div");
-      card.className = "movie-card bg-white rounded-lg shadow-md overflow-hidden flex flex-col hover:shadow-lg transition-shadow";
+      card.className = "movie-card bg-white rounded-lg shadow-md overflow-hidden flex flex-col hover:shadow-lg transition-shadow cursor-pointer";
+      //Lägger till data-id direkt till kortet
+      card.dataset.id = movie.id.toString();
 
       const imageUrl = movie.poster_path
         ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
@@ -74,6 +77,27 @@ export default function home(): HTMLElement {
             </div>
         </div>`;
       grid.appendChild(card);
+
+      //EventListener som öppnar en modal med mer information om en film
+      card?.addEventListener("click", (event) => {
+
+        const target = event.target as HTMLElement;
+        if(target.closest('button')) {
+          return;
+        }
+
+        const movieId = card.dataset.id;
+
+        if (!movieId) {
+          return;
+        }
+
+        if (movie) {
+        const { modal, openModal } = createMovieModal(movie);
+        document.body.appendChild(modal);
+        openModal();
+        }
+      })
     });
   }
   
