@@ -158,6 +158,8 @@ export default function home(): HTMLElement {
     pageItems.forEach((m) => {
       const dbMovie = findDbMovieByTmdbId(m.id);
       grid.appendChild(createMovieCard(m, dbMovie));
+      
+
     });
 
     updatePagerUI();
@@ -387,27 +389,6 @@ function createMovieCard(movie: TMDBMovie, dbMovie?: DatabaseMovie): HTMLElement
 
   const img = card.querySelector("img")!;
   img.addEventListener("load", () => img.classList.remove("opacity-0"));
-
-  //EventListener som öppnar en modal med mer information om en film
-  card?.addEventListener("click", (event) => {
-
-    const target = event.target as HTMLElement;
-    if(target.closest('button')) {
-      return;
-    }
-
-    const movieId = card.dataset.id;
-
-    if (!movieId) {
-      return;
-    }
-
-    if (movie) {
-    const { modal, openModal } = createMovieModal(movie);
-    document.appendChild(modal);
-    openModal();
-    }
-  });
 
   return card;
 }
