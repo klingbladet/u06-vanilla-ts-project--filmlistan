@@ -94,7 +94,7 @@ export default function home(): HTMLElement {
 
         if (movie) {
         const { modal, openModal } = createMovieModal(movie);
-        document.body.appendChild(modal);
+        document.appendChild(modal);
         openModal();
         }
       })
