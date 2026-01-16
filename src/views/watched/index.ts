@@ -115,18 +115,6 @@ function createWatchedCard(movie: DatabaseMovie, onRemove: () => void): HTMLElem
   ratingWidget.style.color = 'white'; 
   ratingSlot.appendChild(ratingWidget);
 
-  // 2. Inject Review Component
-  const reviewSlot = card.querySelector('.review-slot') as HTMLElement;
-  const reviewWidget = reviewComponent();
-  
-  reviewWidget.addEventListener('submit', (e) => {
-    e.preventDefault();
-    alert("Recension sparad! (Simulerad)");
-  });
-  
-  reviewSlot.appendChild(reviewWidget);
-
-
   // 3. Logic: Delete
   const deleteBtn = card.querySelector(".btn-delete") as HTMLButtonElement;
   deleteBtn.addEventListener("click", async (e) => {

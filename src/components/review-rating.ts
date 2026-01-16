@@ -1,24 +1,29 @@
 export function reviewComponent() {
   const reviewForm = document.createElement('form');
-  const reviewInput = document.createElement('input');
+  const nameInput = document.createElement('input')
+  const reviewText = document.createElement('textarea');
   const submitReviewBtn = document.createElement('button');
 
+  nameInput.type = 'text'
+  nameInput.placeholder = 'Your name'
+  nameInput.style.marginBottom = '15px'
   reviewForm.style.display = 'flex';
+  reviewForm.style.flexDirection = 'column'
   reviewForm.style.justifyContent = 'space-between'
   reviewForm.style.marginTop = '10px'
-  reviewInput.type = 'text';
-  reviewInput.placeholder = 'Write your review';
+  reviewText.placeholder = 'Write your review';
   submitReviewBtn.type = 'submit';
   submitReviewBtn.textContent = 'Submit';
   submitReviewBtn.style.backgroundColor = 'gray';
   submitReviewBtn.style.color = '#fff';
+  submitReviewBtn.style.alignSelf = 'center';
   submitReviewBtn.style.cursor = 'pointer';
   submitReviewBtn.style.borderRadius = '10px';
   submitReviewBtn.style.padding = '1px';
   submitReviewBtn.style.width = '70px';
-  submitReviewBtn.style.width = '70px';
+  submitReviewBtn.style.marginTop = '15px'
 
-  reviewForm.append(reviewInput, submitReviewBtn);
+  reviewForm.append(nameInput, reviewText, submitReviewBtn);
   return reviewForm;
   
 }
