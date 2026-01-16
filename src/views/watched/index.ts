@@ -1,94 +1,176 @@
-import { getMovies } from "../../services/movieApi";
+import { getMovies, deleteMovie } from "../../services/movieApi";
+import createMovieModal from "../../components/Modal";
 import type { DatabaseMovie } from "../../types/movie";
-import { reviewComponent } from "../../components/review-rating";
-import { ratingComponent } from "../../components/review-rating";
-import { deleteButtonComponent } from "../../components/buttons"; // Corrected import
+import { reviewComponent, ratingComponent } from "../../components/review-rating";
 
 export default function watched(): HTMLElement {
   const container = document.createElement("div");
-  container.className = "p-6";
+  container.className = "min-h-screen bg-zinc-950 text-white";
 
-  const title = document.createElement("h1");
-  title.className = "text-3xl font-bold mb-6";
-  title.textContent = "My watched Movies";
+  const inner = document.createElement("div");
+  inner.className = "max-w-7xl mx-auto px-4 py-6";
+  container.appendChild(inner);
 
-  const grid = document.createElement ("div");
-  grid.className = "movie-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6";
+  // --- Header Section ---
+  const header = document.createElement("div");
+  header.className = "mb-8";
+  header.innerHTML = `
+    <div class="inline-flex items-center rounded-lg bg-amber-400 px-3 py-1 text-xs font-extrabold tracking-wide text-black mb-2">
+      HISTORY
+    </div>
+    <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">Sedda filmer</h1>
+    <p class="text-zinc-400 mt-1 text-sm">Din historik och dina recensioner.</p>
+  `;
+  inner.appendChild(header);
 
-  const loadingMessage = document.createElement("p");
-  loadingMessage.textContent = "Loading history...";
-  loadingMessage.className = "text-gray-500";
+  // --- Grid Section ---
+  const grid = document.createElement("div");
+  grid.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6";
+  inner.appendChild(grid);
 
+  const loadingMessage = document.createElement("div");
+  loadingMessage.className = "col-span-full py-12 text-center text-zinc-500 animate-pulse";
+  loadingMessage.textContent = "Hämtar historik...";
+  grid.appendChild(loadingMessage);
+
+  // --- Logic ---
   function showEmptyMessage() {
-    grid.innerHTML = "";
-    const emptyMessage = document.createElement("p");
-    emptyMessage.textContent = "You haven't marked any movies as watched yet.";
-    emptyMessage.className = "text-gray-500 text-center py-8";
-    container.appendChild(emptyMessage);
+    grid.innerHTML = `
+      <div class="col-span-full flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5 p-12 text-center">
+        <div class="text-4xl mb-4">🎬</div>
+        <h3 class="text-lg font-bold text-white">Inga sedda filmer än</h3>
+        <p class="text-zinc-400 text-sm mt-2">När du markerar filmer som "Watched" hamnar de här.</p>
+      </div>
+    `;
   }
 
-  container.appendChild(title);
-  container.appendChild(loadingMessage);
-  container.appendChild(grid);
-
-  //Load movies asynchronously
   getMovies().then((movies: DatabaseMovie[]) => {
     loadingMessage.remove();
-    //Filter so that this page is different from watchlist.
     const watchedMovies = movies.filter(movies => movies.status === 'watched');
     
     if (watchedMovies.length === 0) {
       showEmptyMessage();
       return;
     }
-    //Render the movies
+
     watchedMovies.forEach((movie) => {
-      const card = document.createElement("div");
-      card.className = "movie-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow relative"; // Added 'relative'
-      
-      const imageUrl = movie.poster_path
-      ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-      : 'https://via.placeholder.com/500x750?text=No+Poster';
-      
-      const img = document.createElement('img');
-      img.src = imageUrl;
-      img.alt = movie.title;
-      img.className = "w-full h-auto";
-
-      const contentDiv = document.createElement('div');
-      contentDiv.className = "p-4 flex flex-col pt-8"; // Added pt-8 to give space for the button
-
-      const titleEl = document.createElement('h3');
-      titleEl.className = "font-bold text-lg mb-2";
-      titleEl.textContent = movie.title;
-
-      const detailsDiv = document.createElement('div');
-      detailsDiv.className = "flex flex-col items-center justify-between";
-      
-      // Här skapar vi och lägger till rating-komponenten för varje film
-      const reviewForm = reviewComponent();
-      const stars = ratingComponent();
-      const scoreText = document.createElement('p');
-
-      const watchedOn = document.createElement('p');
-      watchedOn.className = "text-xs text-gray-400 mt-2";
-      watchedOn.textContent = `Watched on: ${movie.date_watched || 'Unknown'}`;
-      
-      const deleteButton = deleteButtonComponent(movie.id, () => { // Corrected usage
-        card.remove();
-        if (grid.children.length === 0) {
-          showEmptyMessage();
-        }
-      });
-      
-      contentDiv.append(titleEl, detailsDiv, watchedOn, scoreText, stars, reviewForm, deleteButton);
-      card.append(img, contentDiv);
-      grid.appendChild(card);
+      grid.appendChild(createWatchedCard(movie, () => {
+         if (grid.children.length === 0) showEmptyMessage();
+      }));
     });
   })
   .catch((error) => {
-    loadingMessage.textContent ="Failed to load history";
+    loadingMessage.textContent ="Kunde inte ladda historik";
+    loadingMessage.className = "col-span-full text-center text-rose-500 py-8";
     console.error(error);
   });
+
   return container;
+}
+
+/**
+ * Creates a card for the Watched view.
+ * Incorporates the external rating and review components.
+ */
+function createWatchedCard(movie: DatabaseMovie, onRemove: () => void): HTMLElement {
+  const card = document.createElement("article");
+  card.className = "group relative overflow-hidden rounded-2xl bg-zinc-900/60 ring-1 ring-white/10 transition hover:ring-white/20 flex flex-col";
+
+  const imageUrl = movie.poster_path
+    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+    : 'https://placehold.co/500x750?text=No+Poster';
+  
+  const dateWatched = movie.date_watched ? new Date(movie.date_watched).toLocaleDateString('sv-SE') : 'Okänt datum';
+
+  // Structure
+  // Added 'poster-container' class to the div for easier selection
+  card.innerHTML = `
+    <div class="poster-container relative aspect-[2/3] w-full bg-zinc-800 shrink-0">
+      <img src="${imageUrl}" alt="${movie.title}" loading="lazy"
+        class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
+      
+      <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent"></div>
+
+      <!-- Delete Button -->
+      <button class="btn-delete absolute right-3 top-3 z-20 rounded-full bg-black/60 p-2 text-white/70 ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-rose-500 hover:text-white hover:scale-110">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+      </button>
+    </div>
+
+    <div class="p-4 flex flex-col gap-4 flex-1">
+      <div>
+        <h3 class="text-lg font-bold text-white line-clamp-1">${movie.title}</h3>
+        <p class="text-xs text-zinc-500">Sedd: ${dateWatched}</p>
+      </div>
+
+      <!-- Slots for external components -->
+      <div class="rating-slot flex justify-center py-2 bg-white/5 rounded-lg"></div>
+      <div class="review-slot"></div>
+    </div>
+  `;
+
+  // 1. Inject Rating Component
+  const ratingSlot = card.querySelector('.rating-slot') as HTMLElement;
+  const ratingWidget = ratingComponent();
+  ratingWidget.style.color = 'white'; 
+  ratingSlot.appendChild(ratingWidget);
+
+  // 2. Inject Review Component
+  const reviewSlot = card.querySelector('.review-slot') as HTMLElement;
+  const reviewWidget = reviewComponent();
+  
+  reviewWidget.addEventListener('submit', (e) => {
+    e.preventDefault();
+    alert("Recension sparad! (Simulerad)");
+  });
+  
+  reviewSlot.appendChild(reviewWidget);
+
+
+  // 3. Logic: Delete
+  const deleteBtn = card.querySelector(".btn-delete") as HTMLButtonElement;
+  deleteBtn.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    if(!confirm("Ta bort från historiken?")) return;
+    
+    card.style.opacity = "0.5";
+    card.style.pointerEvents = "none";
+    
+    try {
+      await deleteMovie(movie.id);
+      card.remove();
+      onRemove();
+    } catch (err) {
+      console.error(err);
+      alert("Kunde inte ta bort filmen.");
+      card.style.opacity = "1";
+      card.style.pointerEvents = "auto";
+    }
+  });
+
+  // 4. Logic: Open Modal
+  // Corrected selector to use the custom class
+  const imgContainer = card.querySelector(".poster-container") as HTMLElement;
+  
+  if (imgContainer) {
+    imgContainer.style.cursor = "pointer";
+    imgContainer.addEventListener("click", () => {
+      const tmdbFormat = {
+        id: movie.tmdb_id,
+        title: movie.title,
+        overview: movie.overview || "",
+        poster_path: movie.poster_path || "",
+        release_date: movie.release_date || "",
+        vote_average: movie.vote_average || 0
+      };
+
+      const { modal, openModal } = createMovieModal(tmdbFormat);
+      document.body.appendChild(modal);
+      openModal();
+    });
+  } else {
+    console.error("Could not find poster-container for click event");
+  }
+
+  return card;
 }

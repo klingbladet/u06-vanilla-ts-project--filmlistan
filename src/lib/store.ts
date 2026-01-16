@@ -1,5 +1,5 @@
 import type { TMDBMovie } from "../types/movie";
-import { getPopularMoviesTMDB, searchMoviesTMDB } from "../services/tmdbApi.ts";
+import { getPopularMoviesTMDB, searchMoviesTMDB } from "../services/tmdbApi";
 
 class Store {
   renderCallback: () => void = () => {};
