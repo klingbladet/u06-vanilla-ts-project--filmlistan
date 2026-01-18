@@ -1,46 +1,116 @@
-// src/components/filter.ts
+// Importerar typen Genre (id + name)
 import type { Genre } from '../types/movie';
+
+// Importerar funktioner som uppdaterar vårt filter-state
 import { toggleRatingFilter, toggleGenreFilter } from '../lib/store';
 
+// Funktion som bygger hela filter-UI:t och returnerar ett DOM-element
 export function createFilterComponent(genres: Genre[]): HTMLElement {
-  // 1. Skapa en container för alla filter
+
+  // Skapar en wrapper-div som håller ALLA filter
   const filterContainer = document.createElement('div');
-  filterContainer.className = 'flex gap-4 mt-3 justify-center text-sm';
 
-  // 2. Skapa checkbox och label för betyg
-  const ratingCheckbox = document.createElement("input");
-  ratingCheckbox.type = "checkbox";
-  ratingCheckbox.id = "ratingFilter";
+  // Sätter layout: flex, mellanrum, centrering, textstorlek
+  filterContainer.className = 'flex gap-6 mt-3 justify-center text-sm';
 
-  ratingCheckbox.addEventListener("change", () => {
+  // ===== GENRE-FILTER =====
+
+  // Wrapper för label + select (för layout)
+  const genreWrapper = document.createElement('div');
+  genreWrapper.className = 'flex items-center gap-2';
+
+  // Skapar texten "Genre"
+  const genreLabel = document.createElement('label');
+  genreLabel.textContent = 'Genre';
+
+  // Kopplar labeln till selecten via id
+  genreLabel.htmlFor = 'genreSelect';
+
+  // Skapar dropdownen
+  const genreSelect = document.createElement('select');
+
+  // Ger selecten ett id så labeln kan peka på den
+  genreSelect.id = 'genreSelect';
+
+  // Styling (vit bakgrund, kant, padding)
+  genreSelect.className =
+    'bg-white text-black border border-gray-300 rounded px-2 py-1';
+
+  // Default-alternativ som visas först
+  const defaultOption = document.createElement('option');
+  defaultOption.value = '';
+  defaultOption.textContent = 'Alla';
+
+  // Lägger in "Alla" i dropdownen
+  genreSelect.appendChild(defaultOption);
+
+  // Loopar igenom alla genres från API:t
+  genres.forEach((genre) => {
+
+    // Skapar ett option-element för varje genre
+    const option = document.createElement('option');
+
+    // value används i koden (id:t)
+    option.value = String(genre.id);
+
+    // textContent är det användaren ser
+    option.textContent = genre.name;
+
+    // Lägger option i selecten
+    genreSelect.appendChild(option);
+  });
+
+  // Körs när användaren väljer en genre
+  genreSelect.addEventListener('change', () => {
+
+    // Hämtar valt genre-id
+    const selectedGenreId = Number(genreSelect.value);
+
+    // Om något är valt (inte "Alla")
+    if (selectedGenreId) {
+      toggleGenreFilter(selectedGenreId);
+    }
+  });
+
+  // Bygger ihop label + select
+  genreWrapper.appendChild(genreLabel);
+  genreWrapper.appendChild(genreSelect);
+
+  // ===== BETYGSFILTER =====
+
+  // Wrapper för checkbox + label
+  const ratingWrapper = document.createElement('div');
+  ratingWrapper.className = 'flex items-center gap-2';
+
+  // Skapar checkboxen
+  const ratingCheckbox = document.createElement('input');
+  ratingCheckbox.type = 'checkbox';
+  ratingCheckbox.id = 'ratingFilter';
+
+  // Körs när checkboxen klickas
+  ratingCheckbox.addEventListener('change', () => {
+
+    // Skickar true/false till store
     toggleRatingFilter(ratingCheckbox.checked);
-  })
+  });
 
-  const ratingLabel = document.createElement("label");
-  ratingLabel.htmlFor = "ratingFilter";
-  ratingLabel.textContent = "Betyg ≥ 7";
+  // Texten bredvid checkboxen
+  const ratingLabel = document.createElement('label');
+  ratingLabel.htmlFor = 'ratingFilter';
+  ratingLabel.textContent = 'Betyg ≥ 7';
 
-  // 3. Lägg till dem i containern
-  filterContainer.appendChild(ratingCheckbox);
-  filterContainer.appendChild(ratingLabel);
+  // Lägger checkbox + label i sin wrapper
+  ratingWrapper.appendChild(ratingCheckbox);
+  ratingWrapper.appendChild(ratingLabel);
 
-  // TODO: Här ska vi senare loopa igenom 'genres' och skapa fler checkboxar.
-  genres.forEach(genre => {
-    const genreCheckBox = document.createElement("input");
-    genreCheckBox.type = "checkbox";
-    genreCheckBox.id = `genre-${genre.id}`;
+  // ===== SLUTMONTERING =====
 
-    genreCheckBox.addEventListener("change", () => {
-      toggleGenreFilter(genre.id);
-    })
-    const genreLabel = document.createElement("label");
-    genreLabel.htmlFor = `genre-${genre.id}`;
-    genreLabel.textContent = genre.name;
+  // Lägger in genre-filtret i huvudcontainern
+  filterContainer.appendChild(genreWrapper);
 
-    filterContainer.appendChild(genreCheckBox);
-    filterContainer.appendChild(genreLabel);
-  })
+  // Lägger in betygs-filtret i huvudcontainern
+  filterContainer.appendChild(ratingWrapper);
 
-  // Sist, returnera den färdiga containern
+  // Returnerar hela filtret så det kan mountas i DOM:en
   return filterContainer;
 }
