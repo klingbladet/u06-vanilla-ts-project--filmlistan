@@ -1,6 +1,7 @@
 import createMovieModal from "../../components/Modal";
 import { deleteMovie, getMovies, updateMovie } from "../../services/movieApi";
 import type { DatabaseMovie } from "../../types/movie";
+import { ratingComponent } from "../../components/review-rating";
 
 export default function watchlist(): HTMLElement {
   const container = document.createElement("div");
@@ -201,8 +202,7 @@ function createWatchlistCard(movie: DatabaseMovie, onRemove: () => void): HTMLEl
     }
   });
 
-  // 3. Open Modal (Click anywhere else on card)
-  card.addEventListener("click", (e) => {
+  card.addEventListener("click", () => {
     // Convert DatabaseMovie to TMDBMovie structure for the modal
     const tmdbFormat = {
       id: movie.tmdb_id,
@@ -213,7 +213,16 @@ function createWatchlistCard(movie: DatabaseMovie, onRemove: () => void): HTMLEl
       vote_average: movie.vote_average || 0
     };
 
-    const { modal, openModal } = createMovieModal(tmdbFormat);
+    const { modal, openModal } = createMovieModal(tmdbFormat, movie, (updatedMovie) => {
+      // Refresh the card's rating widget when modal updates
+      const newWidget = ratingComponent(updatedMovie.personal_rating || 0, async (newRating) => {
+         try {
+           await updateMovie(updatedMovie.id, { personal_rating: newRating });
+         } catch(e) { console.error(e); }
+      });
+      newWidget.style.color = 'white';
+    });
+    
     document.body.appendChild(modal);
     openModal();
   });

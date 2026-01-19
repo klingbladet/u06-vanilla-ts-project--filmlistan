@@ -1,7 +1,7 @@
-import { getMovies, deleteMovie } from "../../services/movieApi";
+import { getMovies, deleteMovie, updateMovie } from "../../services/movieApi";
 import createMovieModal from "../../components/Modal";
 import type { DatabaseMovie } from "../../types/movie";
-import { reviewComponent, ratingComponent } from "../../components/review-rating";
+import { ratingComponent } from "../../components/review-rating";
 
 export default function watched(): HTMLElement {
   const container = document.createElement("div");
@@ -11,7 +11,6 @@ export default function watched(): HTMLElement {
   inner.className = "max-w-7xl mx-auto px-4 py-6";
   container.appendChild(inner);
 
-  // --- Header Section ---
   const header = document.createElement("div");
   header.className = "mb-8";
   header.innerHTML = `
@@ -23,7 +22,6 @@ export default function watched(): HTMLElement {
   `;
   inner.appendChild(header);
 
-  // --- Grid Section ---
   const grid = document.createElement("div");
   grid.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6";
   inner.appendChild(grid);
@@ -33,7 +31,6 @@ export default function watched(): HTMLElement {
   loadingMessage.textContent = "Hämtar historik...";
   grid.appendChild(loadingMessage);
 
-  // --- Logic ---
   function showEmptyMessage() {
     grid.innerHTML = `
       <div class="col-span-full flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5 p-12 text-center">
@@ -46,7 +43,7 @@ export default function watched(): HTMLElement {
 
   getMovies().then((movies: DatabaseMovie[]) => {
     loadingMessage.remove();
-    const watchedMovies = movies.filter(movies => movies.status === 'watched');
+    const watchedMovies = movies.filter(movie => movie.status === 'watched');
     
     if (watchedMovies.length === 0) {
       showEmptyMessage();
@@ -68,10 +65,6 @@ export default function watched(): HTMLElement {
   return container;
 }
 
-/**
- * Creates a card for the Watched view.
- * Incorporates the external rating and review components.
- */
 function createWatchedCard(movie: DatabaseMovie, onRemove: () => void): HTMLElement {
   const card = document.createElement("article");
   card.className = "group relative overflow-hidden rounded-2xl bg-zinc-900/60 ring-1 ring-white/10 transition hover:ring-white/20 flex flex-col";
@@ -82,17 +75,14 @@ function createWatchedCard(movie: DatabaseMovie, onRemove: () => void): HTMLElem
   
   const dateWatched = movie.date_watched ? new Date(movie.date_watched).toLocaleDateString('sv-SE') : 'Okänt datum';
 
-  // Structure
-  // Added 'poster-container' class to the div for easier selection
   card.innerHTML = `
-    <div class="poster-container relative aspect-[2/3] w-full bg-zinc-800 shrink-0">
+    <div class="poster-container relative aspect-[2/3] w-full bg-zinc-800 shrink-0 cursor-pointer overflow-hidden">
       <img src="${imageUrl}" alt="${movie.title}" loading="lazy"
         class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
       
       <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent"></div>
 
-      <!-- Delete Button -->
-      <button class="btn-delete absolute right-3 top-3 z-20 rounded-full bg-black/60 p-2 text-white/70 ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-rose-500 hover:text-white hover:scale-110">
+      <button class="btn-delete absolute right-3 top-3 z-30 rounded-full bg-black/60 p-2 text-white/70 ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-rose-500 hover:text-white hover:scale-110">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
       </button>
     </div>
@@ -103,19 +93,27 @@ function createWatchedCard(movie: DatabaseMovie, onRemove: () => void): HTMLElem
         <p class="text-xs text-zinc-500">Sedd: ${dateWatched}</p>
       </div>
 
-      <!-- Slots for external components -->
       <div class="rating-slot flex justify-center py-2 bg-white/5 rounded-lg"></div>
       <div class="review-slot"></div>
     </div>
   `;
 
-  // 1. Inject Rating Component
   const ratingSlot = card.querySelector('.rating-slot') as HTMLElement;
-  const ratingWidget = ratingComponent();
-  ratingWidget.style.color = 'white'; 
+  const ratingWidget = ratingComponent(movie.personal_rating || 0, async(newRating) => {
+    try {
+      await updateMovie(movie.id,  { personal_rating: newRating });
+    } catch (err) {
+      console.log("Failed to update rating:", err);
+      alert("Kunde inte spara betyget.");
+    }
+    });
+
   ratingSlot.appendChild(ratingWidget);
 
-  // 3. Logic: Delete
+  ratingSlot.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+
   const deleteBtn = card.querySelector(".btn-delete") as HTMLButtonElement;
   deleteBtn.addEventListener("click", async (e) => {
     e.stopPropagation();
@@ -136,29 +134,34 @@ function createWatchedCard(movie: DatabaseMovie, onRemove: () => void): HTMLElem
     }
   });
 
-  // 4. Logic: Open Modal
-  // Corrected selector to use the custom class
-  const imgContainer = card.querySelector(".poster-container") as HTMLElement;
-  
-  if (imgContainer) {
-    imgContainer.style.cursor = "pointer";
-    imgContainer.addEventListener("click", () => {
-      const tmdbFormat = {
-        id: movie.tmdb_id,
-        title: movie.title,
-        overview: movie.overview || "",
-        poster_path: movie.poster_path || "",
-        release_date: movie.release_date || "",
-        vote_average: movie.vote_average || 0
-      };
 
-      const { modal, openModal } = createMovieModal(tmdbFormat);
-      document.body.appendChild(modal);
-      openModal();
+  card.addEventListener("click", () => {
+    // Convert DatabaseMovie to TMDBMovie structure for the modal
+    const tmdbFormat = {
+      id: movie.tmdb_id,
+      title: movie.title,
+      overview: movie.overview || "",
+      poster_path: movie.poster_path || "",
+      release_date: movie.release_date || "",
+      vote_average: movie.vote_average || 0
+    };
+
+    const { modal, openModal } = createMovieModal(tmdbFormat, movie, (updatedMovie) => {
+      // Refresh the card's rating widget when modal updates
+      const newWidget = ratingComponent(updatedMovie.personal_rating || 0, async (newRating) => {
+         try {
+           await updateMovie(updatedMovie.id, { personal_rating: newRating });
+         } catch(e) { console.error(e); }
+      });
+      newWidget.style.color = 'white';
+      
+      ratingSlot.innerHTML = '';
+      ratingSlot.appendChild(newWidget);
     });
-  } else {
-    console.error("Could not find poster-container for click event");
-  }
+    
+    document.body.appendChild(modal);
+    openModal();
+  });
 
   return card;
 }

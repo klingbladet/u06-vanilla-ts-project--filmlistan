@@ -328,9 +328,8 @@ export default function home(): HTMLElement {
   });
 
   return container;
-}
 
-function createMovieCard(movie: TMDBMovie, dbMovie?: DatabaseMovie): HTMLElement {
+  function createMovieCard(movie: TMDBMovie, dbMovie?: DatabaseMovie): HTMLElement {
   const card = document.createElement("article");
   card.className =
     "group overflow-hidden rounded-2xl bg-zinc-900/60 ring-1 ring-white/10 transition hover:ring-white/20";
@@ -390,24 +389,30 @@ function createMovieCard(movie: TMDBMovie, dbMovie?: DatabaseMovie): HTMLElement
   const img = card.querySelector("img")!;
   img.addEventListener("load", () => img.classList.remove("opacity-0"));
 
-  card.addEventListener('click', (event) => {
-    // Om klicket var på en knapp inuti kortet, gör ingenting.
-    if ((event.target as HTMLElement).closest('button')) {
-      return;
-    }
+  card.addEventListener("click", () => {
+    // Convert DatabaseMovie to TMDBMovie structure for the modal
+    const tmdbFormat = {
+      id: movie.id,
+      title: movie.title,
+      overview: movie.overview || "",
+      poster_path: movie.poster_path || "",
+      release_date: movie.release_date || "",
+      vote_average: movie.vote_average || 0
+    };
 
-    // 1. Skapa modalen för den här specifika filmen
-    const { modal, openModal } = createMovieModal(movie);
-
-    // 2. Lägg till modalen i dokumentet
+    const { modal, openModal } = createMovieModal(tmdbFormat, dbMovie, (updatedMovie) => {
+      const idx = savedMovies.findIndex((m) => m.id === updatedMovie.id)
+      if (idx >= 0) {
+        savedMovies[idx] = updatedMovie;
+      }
+    });
+    
     document.body.appendChild(modal);
-
-      // 3. Öppna modalen
     openModal();
   });
 
-
   return card;
+  }
 }
 
 function showToast(message: string, success = true) {
