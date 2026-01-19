@@ -9,7 +9,7 @@ export function reviewComponent(initialReview: string = '', onSubmit?: (review: 
   nameInput.type = 'text'
   nameInput.placeholder = 'Ditt namn (valfritt)';
   nameInput.style.fontStyle = 'italic';
-  nameInput.style.marginBottom = '15px';
+  nameInput.className = "w-full bg-black/20 mb-3 border border-white/10 rounded-lg p-3 text-sm text-zinc-200 focus:outline-none focus:border-amber-400/50";
 
   reviewForm.style.display = 'flex';
   reviewForm.style.flexDirection = 'column'
@@ -19,11 +19,10 @@ export function reviewComponent(initialReview: string = '', onSubmit?: (review: 
   reviewText.value = initialReview
   reviewText.placeholder = 'Skriv din review här';
   reviewText.style.fontStyle = 'italic';
-  reviewText.className = "w-full bg-black/20 border border-white/10 rounded-lg p-3 text-sm text-zinc-200 focus:outline-none focus:border-amber-400/50 min-h-[100px]"
+  reviewText.className = "w-full bg-black/20 border border-white/10 rounded-lg p-3 text-sm text-zinc-200 focus:outline-none focus:border-amber-400/50 min-h-[100px]";
 
-
+  submitReviewBtn.innerText = 'Spara recension'
   submitReviewBtn.type = 'submit';
-  submitReviewBtn.textContent = 'Spara recension';
   submitReviewBtn.style.color = '#fff';
   submitReviewBtn.style.alignSelf = 'center';
   submitReviewBtn.style.cursor = 'pointer';

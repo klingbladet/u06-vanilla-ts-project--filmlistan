@@ -12,24 +12,27 @@ export default function watched(): HTMLElement {
   container.appendChild(inner);
 
   const header = document.createElement("div");
-  header.className = "mb-8";
-  header.innerHTML = `
+  header.className = "flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8";
+
+  const titleGroup = document.createElement("div");
+  titleGroup.innerHTML = `
     <div class="inline-flex items-center rounded-lg bg-amber-400 px-3 py-1 text-xs font-extrabold tracking-wide text-black mb-2">
       HISTORY
     </div>
     <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">Sedda filmer</h1>
     <p class="text-zinc-400 mt-1 text-sm">Din historik och dina recensioner.</p>
   `;
-  inner.appendChild(header);
   
   const clearBtn = document.createElement("button");
   clearBtn.className = "rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-xs font-bold text-rose-400 transition hover:bg-rose-500/10 hover:text-rose-300 disabled:opacity-50 disabled:cursor-not-allowed";
   clearBtn.textContent = "Rensa hela listan";
 
+  header.appendChild(titleGroup);
   header.appendChild(clearBtn);
+  inner.appendChild(header);
 
   const grid = document.createElement("div");
-  grid.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6";
+  grid.className = "grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5";
   inner.appendChild(grid);
 
   const loadingMessage = document.createElement("div");
