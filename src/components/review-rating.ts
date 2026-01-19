@@ -1,5 +1,6 @@
 export function reviewComponent(initialReview: string = '', onSubmit?: (review: string) => void) {
 
+  const reviewContainer = document.createElement('div');
   const reviewForm = document.createElement('form');
   const nameInput = document.createElement('input')
   const reviewText = document.createElement('textarea');
@@ -16,19 +17,19 @@ export function reviewComponent(initialReview: string = '', onSubmit?: (review: 
   reviewForm.style.justifyContent = 'space-between'
   reviewForm.style.marginTop = '10px'
 
+  reviewText.value = initialReview
   reviewText.placeholder = 'Skriv din review här';
   reviewText.style.fontStyle = 'italic';
+  reviewText.className = "w-full bg-black/20 border border-white/10 rounded-lg p-3 text-sm text-zinc-200 focus:outline-none focus:border-amber-400/50 min-h-[100px]"
+
 
   submitReviewBtn.type = 'submit';
   submitReviewBtn.textContent = 'Spara recension';
-  submitReviewBtn.style.backgroundColor = 'gray';
   submitReviewBtn.style.color = '#fff';
   submitReviewBtn.style.alignSelf = 'center';
   submitReviewBtn.style.cursor = 'pointer';
-  submitReviewBtn.style.borderRadius = '10px';
-  submitReviewBtn.style.padding = '1px';
-  submitReviewBtn.style.width = '70px';
   submitReviewBtn.style.marginTop = '15px'
+  submitReviewBtn.className = "self-end px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg transition-colors"
 
   reviewForm.append(nameInput, reviewText, submitReviewBtn);
 
