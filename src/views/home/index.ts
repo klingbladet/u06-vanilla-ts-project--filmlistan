@@ -1,5 +1,5 @@
-import type { TMDBMovie } from "../../types/movie";
-import { store, loadPopularMovies, loadRecommendations } from "../../lib/store";
+import type { TMDBMovie, DatabaseMovie } from "../../types/movie";
+import { store, loadPopularMovies, loadRecommendations, ensurePopularCount } from "../../lib/store";
 import { SearchComponent } from "../../components/search";
 import createMovieModal from "../../components/Modal";
 import { getMovies, upsertMovieStatusByTmdbId } from "../../services/movieApi";
@@ -7,37 +7,45 @@ import { getMovies, upsertMovieStatusByTmdbId } from "../../services/movieApi";
 export default function home(): HTMLElement {
   const container = document.createElement("div");
   container.className = "home-view p-4 max-w-7xl mx-auto";
-  //Ladda data parallelt och kör både populära & rekommendationer.
-  //Eftersom store.triggerRender() körs när de är klar kommer sidan automatiskt uppdateras
-  if (store.popularMovies.length === 0) {
-    loadPopularMovies(false);//False för att inte rendera den dirket
-  }
-  if (store.recommendations.length === 0) {  
-    loadRecommendations();//Startar hämtining av rekommendationer
-  }
-  // 1. Lägg till sökfältet högst upp så vi kan använda det!
+
+  // Lägg till sökfältet högst upp
   container.appendChild(SearchComponent());
 
-  // 2. Bestäm vilka filmer och vilken rubrik som ska visas
-  let moviesToShow = store.isSearching ? store.searchResults : store.popularMovies;
-  let sectionTitle = store.isSearching ? `Sökresultat: "${store.currentSearchQuery}"` : "Populära filmer just nu";
+  // Inner wrapper för hela innehållet
+  const inner = document.createElement("div");
+  inner.className = "space-y-4";
+  container.appendChild(inner);
 
-  // Om vi INTE söker, men har rekommendationer -> Visa dem istället för populära
-  if (!store.isSearching && store.recommendations.length > 0) {
-    moviesToShow = store.recommendations;
-    sectionTitle = `Rekommenderat för dig (baserat på ${store.recommendedBasedOn})`;
-  }
+  // Top row med rubrik, chips och kontroller
+  const topRow = document.createElement("div");
+  topRow.className = "flex flex-wrap items-center justify-between gap-4";
+  inner.appendChild(topRow);
 
-  // Om listan är tom (och vi inte söker), ladda populära filmer som fallback
-  if (moviesToShow.length === 0 && !store.isSearching) {
-    loadPopularMovies();
-  }
-
+  // Rubrik (sätts dynamiskt av setHeading)
   const heading = document.createElement("h2");
-  heading.textContent = sectionTitle;
-  heading.className = "text-2xl font-bold mb-6 text-center";
-  container.appendChild(heading);
+  heading.className = "flex items-center gap-3 text-xl font-bold text-white";
+  topRow.appendChild(heading);
 
+  // Chips för att filtrera (Popular, Rekommenderat, Watchlist, Watched)
+  const chips = document.createElement("div");
+  chips.className = "flex flex-wrap gap-2";
+  chips.innerHTML = `
+    <button data-chip="popular" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold transition bg-amber-400 text-black border-amber-400 hover:bg-amber-300">
+      Populära
+    </button>
+    <button data-chip="recommendations" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold transition bg-white/5 text-white/80">
+      ⭐ Rekommenderat
+    </button>
+    <button data-chip="watchlist" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold transition bg-white/5 text-white/80">
+      Watchlist
+    </button>
+    <button data-chip="watched" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold transition bg-white/5 text-white/80">
+      Watched
+    </button>
+  `;
+  topRow.appendChild(chips);
+
+  // Kontroller (per sida dropdown + page info)
   const controls = document.createElement("div");
   controls.className = "flex items-center gap-3";
   controls.innerHTML = `
@@ -78,7 +86,7 @@ export default function home(): HTMLElement {
   const nextBtn = pager.querySelector<HTMLButtonElement>("#nextBtn")!;
 
   // S
-  let activeChip: "popular" | "watchlist" | "watched" = "popular";
+  let activeChip: "popular" | "recommendations" | "watchlist" | "watched" = "popular";
   let perPage = Number(pageSizeSelect.value);
   let page = 1;
 
@@ -121,9 +129,20 @@ export default function home(): HTMLElement {
     grid.innerHTML = "";
 
     if (fullList.length === 0) {
+      // Visa olika meddelanden beroende på vilken vy som är aktiv
+      let emptyMessage = "Inget att visa här ännu.";
+
+      if (activeChip === "recommendations") {
+        emptyMessage = "Inga rekommendationer ännu. Lägg till filmer i din Watchlist eller markera filmer som Watched för att få personliga rekommendationer!";
+      } else if (activeChip === "watchlist") {
+        emptyMessage = "Din watchlist är tom. Lägg till filmer från Populära!";
+      } else if (activeChip === "watched") {
+        emptyMessage = "Du har inte markerat några filmer som sedda ännu.";
+      }
+
       grid.innerHTML = `
         <div class="col-span-full rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-sm text-white/70">
-          Inget att visa här ännu.
+          ${emptyMessage}
         </div>`;
       updatePagerUI();
       return;
@@ -171,12 +190,44 @@ export default function home(): HTMLElement {
     if (activeChip === "popular") {
       setHeading("Populära just nu");
 
-      if (store.popularMovies.length === 0) await loadPopularMovies(false);
+      try {
+        if (store.popularMovies.length === 0) await loadPopularMovies(false);
 
-      //   filmer  popular
-      await ensurePopularCount(perPage);
+        //   filmer  popular
+        await ensurePopularCount(perPage);
 
-      fullList = store.popularMovies;
+        fullList = store.popularMovies;
+      } catch (error) {
+        console.error("Kunde inte ladda populära filmer:", error);
+        fullList = [];
+      }
+
+      setChipActiveStyles();
+      render();
+      return;
+    }
+
+    if (activeChip === "recommendations") {
+      setHeading("⭐ Rekommenderat för dig");
+
+      try {
+        // Ladda rekommendationer om de inte redan finns
+        if (store.recommendations.length === 0) {
+          await loadRecommendations();
+        }
+
+        // Om vi har rekommendationer, visa dem
+        if (store.recommendations.length > 0) {
+          fullList = store.recommendations;
+        } else {
+          // Inga rekommendationer tillgängliga
+          fullList = [];
+        }
+      } catch (error) {
+        console.error("Kunde inte ladda rekommendationer:", error);
+        fullList = [];
+      }
+
       setChipActiveStyles();
       render();
       return;

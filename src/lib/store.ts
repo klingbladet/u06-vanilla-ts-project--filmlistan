@@ -214,7 +214,7 @@ class Store {
     try {
       console.log("[TMDB] loading popular page:", page); // ✅ DEBUG
 
-      const results = await getPopularMoviesTMDB();
+      const results = await getPopularMoviesTMDB(page);
 
       const existingIds = new Set(this.popularMovies.map((m) => m.id));
       const merged = [...this.popularMovies];

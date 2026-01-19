@@ -99,6 +99,7 @@ export async function upsertMovieStatusByTmdbId(args: {
     poster_path: tmdbMovie.poster_path ?? "",
     release_date: tmdbMovie.release_date ?? "",
     overview: tmdbMovie.overview ?? "",
+    vote_average: tmdbMovie.vote_average ?? 0,
     status,
     date_watched: status === "watched" ? new Date().toISOString() : null,
   });
