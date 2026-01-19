@@ -1,5 +1,5 @@
 import type { TMDBMovie } from "../../types/movie";
-import { store, loadPopularMovies, searchMovies, loadRecommendations } from "../../lib/store";
+import { store, loadPopularMovies, loadRecommendations } from "../../lib/store";
 import { SearchComponent } from "../../components/search";
 import { addMovie } from "../../services/movieApi";
 
