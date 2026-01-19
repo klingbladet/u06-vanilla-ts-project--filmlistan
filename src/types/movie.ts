@@ -17,6 +17,7 @@ export interface TMDBMovie {
     release_date: string;
     vote_average: number;
   }
+  
   export interface DatabaseMovie {
     id: number;
     tmdb_id: number;
@@ -39,6 +40,7 @@ export interface TMDBMovie {
     poster_path: string;
     release_date: string;
     overview?: string;
+    
     status: MovieStatus;
     vote_average: number;
     personal_rating?: number | null
