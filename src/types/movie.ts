@@ -49,9 +49,15 @@ export interface TMDBMovie {
     date_watched?: string | null;
   }
 
-  //Detta är filmer med en poängsumma som vi använder för uträkningen för algoritmens rekommendation 
+  // En "weighted movie" är en film MED en poängsumma
+  // extends betyder att WeightedMovie ärver alla fält från DatabaseMovie
   export interface WeightedMovie extends DatabaseMovie {
-    weight: number;
+    weight: number;  // Poängen vi räknat ut baserat på användarens preferenser
   }
 
-  //
+  // För kombinerade rekommendationer från flera filmer
+  // Filmer som dyker upp från flera källor får högre score
+  export interface ScoredRecommendation extends TMDBMovie {
+    score: number;        // Hur många gånger filmen rekommenderats
+    sources: string[];    // Vilka filmer som ledde till denna rekommendation
+  }
