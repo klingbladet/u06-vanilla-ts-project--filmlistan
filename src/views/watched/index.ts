@@ -21,6 +21,12 @@ export default function watched(): HTMLElement {
     <p class="text-zinc-400 mt-1 text-sm">Din historik och dina recensioner.</p>
   `;
   inner.appendChild(header);
+  
+  const clearBtn = document.createElement("button");
+  clearBtn.className = "rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-xs font-bold text-rose-400 transition hover:bg-rose-500/10 hover:text-rose-300 disabled:opacity-50 disabled:cursor-not-allowed";
+  clearBtn.textContent = "Rensa hela listan";
+
+  header.appendChild(clearBtn);
 
   const grid = document.createElement("div");
   grid.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6";
@@ -50,6 +56,25 @@ export default function watched(): HTMLElement {
       return;
     }
 
+    clearBtn.addEventListener('click', async () => {
+      if (!confirm(`Är du säker på att du vill ta bort alla ${watchedMovies.length} filmer?`)) {
+        return;
+      }
+      clearBtn.disabled = true;
+      clearBtn.textContent = "Rensar...";
+      
+      try {
+        await Promise.all(watchedMovies.map(movie => deleteMovie(movie.id)));
+        showEmptyMessage();
+      } catch (error) {
+        console.error("Failed to clear watchlist", error);
+        alert("Kunde inte rensa listan.");
+      } finally {
+        clearBtn.disabled = false;
+        clearBtn.textContent = "Rensa hela listan";
+      }
+    });
+    
     watchedMovies.forEach((movie) => {
       grid.appendChild(createWatchedCard(movie, () => {
          if (grid.children.length === 0) showEmptyMessage();

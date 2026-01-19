@@ -215,6 +215,11 @@ function createWatchlistCard(movie: DatabaseMovie, onRemove: () => void): HTMLEl
 
     const { modal, openModal } = createMovieModal(tmdbFormat, movie, (updatedMovie) => {
       // Refresh the card's rating widget when modal updates
+      modal.innerHTML =`
+              <button class="flex-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 py-3 text-sm font-bold hover:bg-emerald-500 hover:text-black transition">
+          + Watchlist
+        </button>
+        `
       const newWidget = ratingComponent(updatedMovie.personal_rating || 0, async (newRating) => {
          try {
            await updateMovie(updatedMovie.id, { personal_rating: newRating });

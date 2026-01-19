@@ -7,10 +7,9 @@ export function reviewComponent(initialReview: string = '', onSubmit?: (review: 
   const submitReviewBtn = document.createElement('button');
 
   nameInput.type = 'text'
-  nameInput.placeholder = 'Your name'
+  nameInput.placeholder = 'Ditt namn (valfritt)';
   nameInput.style.fontStyle = 'italic';
-  nameInput.style.marginBottom = '15px'
-  nameInput.style
+  nameInput.style.marginBottom = '15px';
 
   reviewForm.style.display = 'flex';
   reviewForm.style.flexDirection = 'column'
@@ -33,14 +32,47 @@ export function reviewComponent(initialReview: string = '', onSubmit?: (review: 
 
   reviewForm.append(nameInput, reviewText, submitReviewBtn);
 
+  const reviewsList = document.createElement('div');
+  reviewsList.className = "mt-4 space-y-3 border-t border-white/10 pt-4";
+
+  const renderReviewItem = (text: string, author: string = "Anonym") => {
+    if(!text) return;
+
+    const item = document.createElement('div');
+    item.className = "bg-white/5 p-3 rounded-x1 border border-white/5 animate-in fade-in slite-in-from-bottom-2";
+    item.innerHTML = `
+    <div class="flex items-center gap-2 mb-1">
+     <div class="w-6 h-6 rounded-full bg-amber-400/20 flex items-center justify-center text-[10px] text-amber-400 font-bold">
+       ${author.charAt(0).toUpperCase()}
+     </div>
+     <span class="text-xs font-bold text-zinc-300">${author}</span>
+     <span class="text-[10px] text-zinc-500 ml-auto">Just nu</span>
+    </div>
+    <p class="text-sm text-zinc-300 leading-relaxed">${text}</p>
+    `;
+
+    reviewsList.innerHTML = '';
+    reviewsList.appendChild(item);
+  };
+
+  if(initialReview) {
+    renderReviewItem(initialReview, "Du");
+  }
+
   reviewForm.addEventListener('submit', (e) => {
     e.preventDefault();
+    const text = reviewText.value;
+    const author = nameInput.value || "Anonym";
+    if (!text.trim()) return;
+    renderReviewItem(text, author);
+
     if(onSubmit) {
       onSubmit(reviewText.value);
     }
-  })
+  });
 
-  return reviewForm;
+  reviewContainer.append(reviewForm, reviewsList)
+  return reviewContainer;
 }
 
 export function ratingComponent(initialRating: number = 0, onRate?: (rating: number) => void) {

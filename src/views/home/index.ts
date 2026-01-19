@@ -283,50 +283,6 @@ export default function home(): HTMLElement {
     scrollToTop();
   });
 
-  // Save buttons
-  container.addEventListener("click", async (e) => {
-    const btn = (e.target as HTMLElement).closest("button");
-    if (!btn || btn.disabled) return;
-
-    const movieId = Number(btn.dataset.id);
-    const action = btn.dataset.action as "watchlist" | "watched" | undefined;
-    if (!action) return;
-
-    const tmdbMovie = fullList.find((m) => m.id === movieId);
-    if (!tmdbMovie) return;
-
-    const existingDbMovie = findDbMovieByTmdbId(tmdbMovie.id);
-
-    if (existingDbMovie?.status === "watched") {
-      showToast("Filmen är redan Watched");
-      return;
-    }
-
-    const originalText = btn.textContent ?? "";
-    btn.textContent = "Sparar...";
-    btn.disabled = true;
-
-    try {
-      const updated = await upsertMovieStatusByTmdbId({
-        tmdbMovie,
-        status: action,
-        existingDbMovie,
-      });
-
-      const idx = savedMovies.findIndex((m) => m.tmdb_id === updated.tmdb_id);
-      if (idx >= 0) savedMovies[idx] = updated;
-      else savedMovies = [updated, ...savedMovies];
-
-      showToast(action === "watched" ? "Markerad som Watched ✅" : "Sparad i Watchlist ✔");
-      buildFullListForCurrentView();
-    } catch (err) {
-      console.error(err);
-      btn.disabled = false;
-      btn.textContent = originalText;
-      showToast("Något gick fel", false);
-    }
-  });
-
   return container;
 
   function createMovieCard(movie: TMDBMovie, dbMovie?: DatabaseMovie): HTMLElement {
@@ -345,7 +301,7 @@ export default function home(): HTMLElement {
   const watchlistDisabled = isSaved;
   const watchedDisabled = isWatched;
 
-  const watchedLabel = isWatchlist ? "Mark as watched" : isWatched ? "Watched ✅" : "✓ Watched";
+  const watchedLabel = isWatchlist ? "Mark as watched" : isWatched ? "watched ✅" : "✓ Watched";
 
   const rating = Number.isFinite(movie.vote_average) ? movie.vote_average.toFixed(1) : "0.0";
   const release = movie.release_date ?? "";
@@ -389,7 +345,75 @@ export default function home(): HTMLElement {
   const img = card.querySelector("img")!;
   img.addEventListener("load", () => img.classList.remove("opacity-0"));
 
-  card.addEventListener("click", () => {
+  // --- NEW LOCAL LOGIC START ---
+  const watchlistBtn = card.querySelector('button[data-action="watchlist"]') as HTMLButtonElement;
+  const watchedBtn = card.querySelector('button[data-action="watched"]') as HTMLButtonElement;
+
+  const handleAction = async (btn: HTMLButtonElement, action: "watchlist" | "watched") => {
+    // Check local dbMovie state directly
+    if (dbMovie?.status === "watched") {
+      showToast("Filmen är redan Watched");
+      return;
+    }
+
+    const originalText = btn.textContent ?? "";
+    btn.textContent = "Sparar...";
+    btn.disabled = true;
+
+    try {
+      const updated = await upsertMovieStatusByTmdbId({
+        tmdbMovie: movie, 
+        status: action,
+        existingDbMovie: dbMovie,
+      });
+
+      // Update global list
+      const idx = savedMovies.findIndex((m) => m.tmdb_id === updated.tmdb_id);
+      if (idx >= 0) savedMovies[idx] = updated;
+      else savedMovies.push(updated);
+
+      showToast(action === "watchlist" ? "Markerad som Watched ✅" : "Sparad i Watchlist ✔");
+      
+      // Update UI locally without full re-render
+      if (action === "watchlist") {
+        btn.textContent = "Saved";
+        btn.classList.add("bg-white/10", "text-white/50", "cursor-not-allowed");
+        btn.classList.remove("bg-emerald-400", "text-black", "hover:bg-emerald-300");
+        // Update local scope
+        dbMovie = updated;
+      } else {
+        btn.textContent = "Watched ✅";
+        btn.classList.add("bg-white/10", "text-white/50", "cursor-not-allowed");
+        btn.classList.remove("bg-amber-400", "text-black", "hover:bg-amber-300");
+        
+        watchlistBtn.disabled = true;
+        watchlistBtn.classList.add("bg-white/10", "text-white/50", "cursor-not-allowed");
+        watchlistBtn.textContent = "Saved";
+        // Update local scope
+        dbMovie = updated;
+      }
+
+    } catch (err) {
+      console.error(err);
+      btn.disabled = false;
+      btn.textContent = originalText;
+      showToast("Något gick fel", false);
+    }
+  };
+
+  watchlistBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    handleAction(watchlistBtn, "watchlist");
+  });
+
+  watchedBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    handleAction(watchedBtn, "watched");
+  });
+  // --- NEW LOCAL LOGIC END ---
+
+  card.addEventListener("click", (e) => {
+    if((e.target as HTMLElement).closest("button")) return;
     // Convert DatabaseMovie to TMDBMovie structure for the modal
     const tmdbFormat = {
       id: movie.id,

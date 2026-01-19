@@ -1,6 +1,6 @@
 import type { DatabaseMovie, TMDBMovie } from '../types/movie';
 import { reviewComponent, ratingComponent } from './review-rating';
-import { updateMovie } from '../services/movieApi';
+import { updateMovie, upsertMovieStatusByTmdbId } from '../services/movieApi';
 
 export default function createMovieModal(movie: TMDBMovie, dbMovie?: DatabaseMovie, onUpdate?: (updatedMovie: DatabaseMovie) => void) {
 
@@ -46,15 +46,79 @@ export default function createMovieModal(movie: TMDBMovie, dbMovie?: DatabaseMov
       </div>
 
       <div class="p-4 bg-black/20 border-t border-white/5 flex gap-3">
-        <button class="flex-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 py-3 text-sm font-bold hover:bg-emerald-500 hover:text-black transition">
+        <button id="watchlist-button" class="flex-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 py-3 text-sm font-bold hover:bg-emerald-500 hover:text-black transition">
           + Watchlist
         </button>
-        <button class="flex-1 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 py-3 text-sm font-bold hover:bg-amber-500 hover:text-black transition">
+        <button id="watched-button" class="flex-1 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 py-3 text-sm font-bold hover:bg-amber-500 hover:text-black transition">
           ✓ Markera som sedd
         </button>
       </div>
 
     </div>`;
+
+  const watchlistBtn = modal.querySelector('#watchlist-button') as HTMLButtonElement;
+  const watchedBtn = modal.querySelector('#watched-button') as HTMLButtonElement;
+
+  if(dbMovie?.status === 'watchlist') {
+    watchlistBtn.textContent = 'Added';
+    watchlistBtn.disabled = true;
+    watchlistBtn.classList.add('opacity-50', 'cursor-not-allowed');
+  } else if (dbMovie?.status === 'watched') {
+    watchlistBtn.style.display = 'none';
+    watchedBtn.textContent = 'Watched ✅';
+    watchedBtn.disabled = true;
+  }
+
+  watchlistBtn.addEventListener('click', async () => {
+    try {
+      watchlistBtn.textContent = 'Saving...';
+      watchlistBtn.disabled = true;
+
+      const updated = await upsertMovieStatusByTmdbId({
+        tmdbMovie: movie,
+        status: 'watchlist',
+        existingDbMovie: dbMovie
+      });
+
+      watchlistBtn.textContent = 'Added';
+      watchlistBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+      dbMovie = updated;
+
+      if (onUpdate) onUpdate(updated);
+    } catch (err) {
+      console.error(err)
+      watchlistBtn.textContent = '+ watchlist';
+      watchlistBtn.disabled = false;
+      alert("Kunde inte spara till watchlist.");
+    }
+  });
+
+  watchedBtn.addEventListener('click', async () => {
+    try {
+      watchedBtn.textContent = 'Saving...';
+      watchedBtn.disabled = true;
+
+      const updated = await upsertMovieStatusByTmdbId({
+        tmdbMovie: movie,
+        status: 'watched',
+        existingDbMovie: dbMovie
+      });
+
+      watchedBtn.textContent = 'Sett';
+      watchedBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+      dbMovie = updated;
+
+      if (onUpdate) onUpdate(updated);
+    } catch (err) {
+      console.error(err)
+      watchedBtn.textContent = 'Markera som sedd';
+      watchedBtn.disabled = false;
+      alert("Kunde inte spara till watched.");
+    }
+  });
+
 
   // Inject Components without parameters
   const ratingSlot = modal.querySelector('.rating-slot');
