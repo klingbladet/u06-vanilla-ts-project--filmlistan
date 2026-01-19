@@ -77,8 +77,24 @@ export default function createMovieModal(movie: TMDBMovie, dbMovie?: DatabaseMov
 
   const reviewSlot = modal.querySelector('.review-slot');
   if (reviewSlot) {
-    const reviewWidget = reviewComponent();
-    reviewWidget.addEventListener('submit', (e) => e.preventDefault());
+    const initialReview = dbMovie?.review || '';
+    const reviewWidget = reviewComponent(initialReview, async (newReviewText) => {
+      if (dbMovie) {
+        try {
+          await updateMovie(dbMovie.id, { review: newReviewText });
+          dbMovie.review = newReviewText;
+
+          if(onUpdate) onUpdate(dbMovie);
+
+          alert("Recension sparad!");
+        } catch (err) {
+          console.error("Failed to save review", err);
+          alert("Kunde inte spara recensionen.");
+        }
+      } else {
+        alert("Du måste spara filmen (i watchlist eller watched innan du kan recensera den.)")
+      }
+    });
     reviewSlot.appendChild(reviewWidget);
   }
   

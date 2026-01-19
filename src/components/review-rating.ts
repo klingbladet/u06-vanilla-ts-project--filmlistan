@@ -1,4 +1,5 @@
-export function reviewComponent() {
+export function reviewComponent(initialReview: string = '', onSubmit?: (review: string) => void) {
+
   const reviewForm = document.createElement('form');
   const nameInput = document.createElement('input')
   const reviewText = document.createElement('textarea');
@@ -15,11 +16,11 @@ export function reviewComponent() {
   reviewForm.style.justifyContent = 'space-between'
   reviewForm.style.marginTop = '10px'
 
-  reviewText.placeholder = 'Write your review';
+  reviewText.placeholder = 'Skriv din review här';
   reviewText.style.fontStyle = 'italic';
 
   submitReviewBtn.type = 'submit';
-  submitReviewBtn.textContent = 'Submit';
+  submitReviewBtn.textContent = 'Spara recension';
   submitReviewBtn.style.backgroundColor = 'gray';
   submitReviewBtn.style.color = '#fff';
   submitReviewBtn.style.alignSelf = 'center';
@@ -30,8 +31,15 @@ export function reviewComponent() {
   submitReviewBtn.style.marginTop = '15px'
 
   reviewForm.append(nameInput, reviewText, submitReviewBtn);
+
+  reviewForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if(onSubmit) {
+      onSubmit(reviewText.value);
+    }
+  })
+
   return reviewForm;
-  
 }
 
 export function ratingComponent(initialRating: number = 0, onRate?: (rating: number) => void) {
