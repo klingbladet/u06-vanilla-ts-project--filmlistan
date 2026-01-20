@@ -2,7 +2,7 @@
 import type { Genre } from '../types/movie';
 
 // Importerar funktioner som uppdaterar vårt filter-state
-import { toggleRatingFilter } from '../lib/store';
+
 import { store } from '../lib/store'; // direkt access för dropdown-logik
 
 // Funktion som bygger hela filter-UI:t och returnerar ett DOM-element
@@ -57,7 +57,7 @@ export function createFilterComponent(genres: Genre[]): HTMLElement {
     }
 
     // Trigger render så listan uppdateras
-    store.triggerRender();
+    document.dispatchEvent(new CustomEvent('filterchange'));
   });
 
   // Bygger ihop label + select
@@ -78,7 +78,8 @@ export function createFilterComponent(genres: Genre[]): HTMLElement {
 
 
   ratingCheckbox.addEventListener('change', () => {
-    toggleRatingFilter(ratingCheckbox.checked);
+    store.activeFilters.rating.over7 = ratingCheckbox.checked;
+    document.dispatchEvent(new CustomEvent('filterchange'));
   });
 
   const ratingLabel = document.createElement('label');

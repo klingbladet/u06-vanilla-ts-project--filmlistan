@@ -1,6 +1,2 @@
 @import "./global.css";
 @import "tailwindcss";
-
-/* Importera rätt CSS där dina header/footer faktiskt ligger */
-@import "./views/static/header/style.css";
-@import "./views/static/footer/style.css";

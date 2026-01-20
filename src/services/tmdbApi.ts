@@ -1,28 +1,26 @@
 // API-anrop till TMDB API
-import type { TMDBMovie } from "../types/movie.ts";
-
-
+import type { TMDBMovie, Genre } from "../types/movie.ts";
 
 const API_KEY = '85a4b73dc7961b2d832676f9a6dab604';
 
 const BASE_URL = 'https://api.themoviedb.org/3';
 export const TMBD_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
-export async function getPopularMoviesTMDB(): Promise<TMDBMovie[]> {
-  const response = await fetch (`${BASE_URL}/movie/popular?api_key=${API_KEY}&language=en-US&page=1`);
+export async function getPopularMoviesTMDB(page: number = 1): Promise<TMDBMovie[]> {
+  const response = await fetch (`${BASE_URL}/movie/popular?api_key=${API_KEY}&language=en-US&page=${page}`);
   if (!response.ok) {
     throw new Error('Kunde inte hämta populära filmer');
   }
-// TMBD Return array in "results" 
+// TMBD Return array in "results"
   const data = await response.json();
   return data.results;
 }
 
-export async function searchMoviesTMDB(query: string): Promise<TMDBMovie[]> {
+export async function searchMoviesTMDB(query: string, page: number = 1): Promise<TMDBMovie[]> {
   if (!query) return [];
 
   const response = await fetch (`${BASE_URL}/search/movie?api_key=${API_KEY}&language=en-US&query=${
-    encodeURIComponent(query)}&page=1`);
+    encodeURIComponent(query)}&page=${page}`);
 
     if (!response.ok) {
       throw new Error ('Kunde inte söka efter filmer');
@@ -31,12 +29,7 @@ export async function searchMoviesTMDB(query: string): Promise<TMDBMovie[]> {
     return data.results;
 }
 
-type TMDBGenre = {
-  id: number;
-  name: string;
-};
-
-export async function getGenres(): Promise<TMDBGenre[]> {
+export async function getGenres(): Promise<Genre[]> {
   const response = await fetch(
     `${BASE_URL}/genre/movie/list?api_key=${API_KEY}&language=en-US`
   );
@@ -49,4 +42,24 @@ export async function getGenres(): Promise<TMDBGenre[]> {
   return data.genres;
 }
 
-getGenres().then(genres => console.log(genres));
+export async function getRecommendationsTMDB(movieId: number): Promise<TMDBMovie[]> {
+  const response = await fetch(`${BASE_URL}/movie/${movieId}/recommendations?api_key=${API_KEY}&language=en-US&page=1`);
+  if (!response.ok) {
+    throw new Error('Kunde inte hämta rekommendationer');
+  }
+  const data = await response.json();
+  return data.results;
+}
+
+//Här hämtar man filmer baserat på genre och keyword, detta ger fler alternativ att kombinera med rekommendationer
+export async function getSimilarMoviesTMDB(movieId: number): Promise<TMDBMovie[]> {
+  const response = await fetch(
+    `${BASE_URL}/movie/${movieId}/similar?api_key=${API_KEY}&language=en-US&page=1`
+  );
+
+  if (!response.ok) {
+    throw new Error('Kunde inte hämta liknande filmer');
+  }
+  const data = await response.json();
+  return data.results;
+}
