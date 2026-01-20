@@ -60,7 +60,6 @@ This is a **two-tier architecture** app: the backend (Express API + SQLite) is f
 | ✅ | Search Component | `src/components/search.ts` | Real-time search |
 | ✅ | Watchlist | `src/views/watchlist/index.ts` | List, Move to Watched, Delete, Clear All |
 | ✅ | Watched Movies | `src/views/watched/index.ts` | Display watched history |
-| ⚠️ | About | `src/views/about/index.ts` | Demo page (not functional) |
 | ❌ | **Movie Detail** | **Missing** | **Need to create** |
 | ❌ | **User Profile/Stats** | **Missing** | **Optional** |
 

@@ -9,7 +9,6 @@ import footerHTML from "./views/static/footer/index.html?raw";
 
 
 // Dynamiska sidor
-import about from "./views/about/index.ts";
 import home from "./views/home/index.ts";
 import watchlist from "./views/watchlist/index.ts";
 import watched from "./views/watched/index.ts";
@@ -20,8 +19,6 @@ const currentPage = (): string | HTMLElement => {
    switch (path) {
     case "/":
       return home();
-    case "/about":
-      return about();
     case "/watchlist":
       return watchlist();
     case "/watched":
