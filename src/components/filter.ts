@@ -2,7 +2,8 @@
 import type { Genre } from '../types/movie';
 
 // Importerar funktioner som uppdaterar vårt filter-state
-import { toggleRatingFilter, toggleGenreFilter } from '../lib/store';
+import { toggleRatingFilter } from '../lib/store';
+import { store } from '../lib/store'; // direkt access för dropdown-logik
 
 // Funktion som bygger hela filter-UI:t och returnerar ett DOM-element
 export function createFilterComponent(genres: Genre[]): HTMLElement {
@@ -19,98 +20,78 @@ export function createFilterComponent(genres: Genre[]): HTMLElement {
   const genreWrapper = document.createElement('div');
   genreWrapper.className = 'flex items-center gap-2';
 
-  // Skapar texten "Genre"
+  // Skapar "Genre" filter
   const genreLabel = document.createElement('label');
   genreLabel.textContent = 'Genre';
-
-  // Kopplar labeln till selecten via id
   genreLabel.htmlFor = 'genreSelect';
 
   // Skapar dropdownen
   const genreSelect = document.createElement('select');
-
-  // Ger selecten ett id så labeln kan peka på den
   genreSelect.id = 'genreSelect';
+  genreSelect.className = 'bg-white text-black border border-gray-300 rounded px-2 py-1';
 
-  // Styling (vit bakgrund, kant, padding)
-  genreSelect.className =
-    'bg-white text-black border border-gray-300 rounded px-2 py-1';
-
-  // Default-alternativ som visas först
+  // Default-alternativ
   const defaultOption = document.createElement('option');
   defaultOption.value = '';
   defaultOption.textContent = 'Alla';
-
-  // Lägger in "Alla" i dropdownen
   genreSelect.appendChild(defaultOption);
 
-  // Loopar igenom alla genres från API:t
+  // Lägg till alla genres
   genres.forEach((genre) => {
-
-    // Skapar ett option-element för varje genre
     const option = document.createElement('option');
-
-    // value används i koden (id:t)
     option.value = String(genre.id);
-
-    // textContent är det användaren ser
     option.textContent = genre.name;
-
-    // Lägger option i selecten
     genreSelect.appendChild(option);
   });
 
   // Körs när användaren väljer en genre
   genreSelect.addEventListener('change', () => {
+    const value = genreSelect.value;
 
-    // Hämtar valt genre-id
-    const selectedGenreId = Number(genreSelect.value);
+    // Rensa hela genrefiltret först
+    store.activeFilters.genres = [];
 
-    // Om något är valt (inte "Alla")
-    if (selectedGenreId) {
-      toggleGenreFilter(selectedGenreId);
+    // Om inte "Alla", sätt den valda genren
+    if (value !== '') {
+      store.activeFilters.genres.push(Number(value));
     }
+
+    // Trigger render så listan uppdateras
+    store.triggerRender();
   });
 
   // Bygger ihop label + select
   genreWrapper.appendChild(genreLabel);
   genreWrapper.appendChild(genreSelect);
 
-  // ===== BETYGSFILTER =====
+  // ===== BETYGSFILTER ===== skapandet av checkbox/filtrering av betyg över 7 under
 
-  // Wrapper för checkbox + label
   const ratingWrapper = document.createElement('div');
   ratingWrapper.className = 'flex items-center gap-2';
 
-  // Skapar checkboxen
   const ratingCheckbox = document.createElement('input');
   ratingCheckbox.type = 'checkbox';
   ratingCheckbox.id = 'ratingFilter';
+  ratingCheckbox.className =
+  'h-4 w-4 accent-blue-600 cursor-pointer';
 
-  // Körs när checkboxen klickas
+
+
   ratingCheckbox.addEventListener('change', () => {
-
-    // Skickar true/false till store
     toggleRatingFilter(ratingCheckbox.checked);
   });
 
-  // Texten bredvid checkboxen
   const ratingLabel = document.createElement('label');
   ratingLabel.htmlFor = 'ratingFilter';
   ratingLabel.textContent = 'Betyg ≥ 7';
+  
 
-  // Lägger checkbox + label i sin wrapper
   ratingWrapper.appendChild(ratingCheckbox);
   ratingWrapper.appendChild(ratingLabel);
 
-  // ===== SLUTMONTERING =====
-
-  // Lägger in genre-filtret i huvudcontainern
+  // ===== LÄGG ALLT I CONTAINER =====
   filterContainer.appendChild(genreWrapper);
-
-  // Lägger in betygs-filtret i huvudcontainern
   filterContainer.appendChild(ratingWrapper);
 
-  // Returnerar hela filtret så det kan mountas i DOM:en
   return filterContainer;
 }

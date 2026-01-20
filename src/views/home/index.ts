@@ -117,13 +117,13 @@ export default function home(): HTMLElement {
       <span class="h-6 w-1 rounded bg-amber-400"></span>
       <span>Resultat för "${store.currentSearchQuery}"</span>
     `;
-    movies = store.searchResults;
+    movies = store.filteredMovies;
   } else {
     heading.innerHTML = `
       <span class="h-6 w-1 rounded bg-amber-400"></span>
       <span>Populära filmer</span>
     `;
-    movies = store.popularMovies;
+    movies = store.filteredMovies;
 
     if (movies.length === 0) {
       loadPopularMovies();

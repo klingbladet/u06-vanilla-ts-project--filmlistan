@@ -69,7 +69,7 @@ class Store {
   }
 
   // Metod för att slå på/av ett genrefilter
-  toggleGenreFilter(genreId: number) {
+  setGenreFilter(genreId: number) {
     const { genres } = this.activeFilters;
     const index = genres.indexOf(genreId);
 
@@ -117,4 +117,4 @@ export const loadPopularMovies = store.loadPopularMovies.bind(store);
 export const setRenderCallback = store.setRenderCallback.bind(store);
 export const searchMovies = store.searchMovies.bind(store);
 export const toggleRatingFilter = store.toggleRatingFilter.bind(store);
-export const toggleGenreFilter = store.toggleGenreFilter.bind(store);
+export const toggleGenreFilter = store.setGenreFilter.bind(store);
