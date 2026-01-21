@@ -63,7 +63,7 @@ export default function home(): HTMLElement {
   const chips = document.createElement("div");
   chips.className = "flex flex-wrap gap-2";
   chips.innerHTML = `
-    <button data-chip="popular" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold transition bg-amber-400 text-black border-amber-400 hover:bg-amber-300">
+    <button data-chip="popular" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold transition bg-red-500/75 text-black border-red-500/75 hover:bg-red-500/75">
       Populära
     </button>
     <button data-chip="recommendations" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold transition bg-white/5 text-white/80">
@@ -158,7 +158,7 @@ export default function home(): HTMLElement {
     <button id="prevBtn" class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition hover:bg-white/10">
       ← Prev
     </button>
-    <button id="nextBtn" class="rounded-xl bg-amber-400 px-4 py-2 text-xs font-semibold text-black transition hover:bg-amber-300">
+    <button id="nextBtn" class="rounded-xl bg-red-500/75 px-4 py-2 text-xs font-semibold text-black transition hover:bg-red-500">
       Next →
     </button>
   `;
@@ -181,7 +181,7 @@ export default function home(): HTMLElement {
 
   const setHeading = (text: string) => {
     heading.innerHTML = `
-      <span class="h-6 w-1 rounded bg-amber-400"></span>
+      <span class="h-6 w-1 rounded bg-red-500/75"></span>
       <span>${text}</span>
     `;
   };
@@ -306,10 +306,10 @@ export default function home(): HTMLElement {
     chips.querySelectorAll<HTMLButtonElement>("button").forEach((b) => {
       const isActive = b.dataset.chip === activeChip;
       if (isActive) {
-        b.classList.add("bg-amber-400", "text-black", "border-amber-400", "hover:bg-amber-300");
+        b.classList.add("bg-red-500/75", "text-black", "border-red-500/75", "hover:bg-red-500");
         b.classList.remove("bg-white/5", "text-white/80");
       } else {
-        b.classList.remove("bg-amber-400", "text-black", "border-amber-400", "hover:bg-amber-300");
+        b.classList.remove("bg-red-500/75", "text-black", "border-red-500/75", "hover:bg-red-500");
         b.classList.add("bg-white/5", "text-white/80");
       }
     });
@@ -574,7 +574,7 @@ export default function home(): HTMLElement {
             data-action="watched"
             ${watchedDisabled ? "disabled" : ""}
             class="flex-1 rounded-lg px-2 py-2 text-[11px] font-semibold transition
-              ${watchedDisabled ? "bg-white/10 text-white/50 cursor-not-allowed" : "bg-amber-400 text-black hover:bg-amber-300"}">
+              ${watchedDisabled ? "bg-white/10 text-white/50 cursor-not-allowed" : "bg-red-500/75 text-black hover:bg-red-500"}">
               ${watchedLabel}
           </button>
         </div>
@@ -638,7 +638,7 @@ export default function home(): HTMLElement {
         } else { // watched
           btn.textContent = "Watched";
           btn.classList.add("bg-white/10", "text-white/50", "cursor-not-allowed");
-          btn.classList.remove("bg-amber-400", "text-black", "hover:bg-amber-300");
+          btn.classList.remove("bg-red-500/75", "text-black", "hover:bg-red-500");
 
           watchlistBtn.disabled = true;
           watchlistBtn.classList.add("bg-white/10", "text-white/50", "cursor-not-allowed");

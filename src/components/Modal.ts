@@ -49,7 +49,7 @@ export default function createMovieModal(movie: TMDBMovie, dbMovie?: DatabaseMov
         <button id="watchlist-button" class="flex-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 py-3 text-sm font-bold hover:bg-emerald-500 hover:text-black transition">
           + Watchlist
         </button>
-        <button id="watched-button" class="flex-1 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 py-3 text-sm font-bold hover:bg-amber-500 hover:text-black transition">
+        <button id="watched-button" class="flex-1 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500/75 py-3 text-sm font-bold hover:bg-red-500 hover:text-black transition ease-in-out">
           ✓ Markera som sedd
         </button>
       </div>
