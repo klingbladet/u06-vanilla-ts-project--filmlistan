@@ -3,20 +3,20 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import moviesRouter from './routes/movies.js';
 
-// Läs in miljövariabler från .env
+//  från .env
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
-// Middleware
-app.use(cors()); // Aktivera CORS för alla routes
-app.use(express.json()); // Parsar JSON-body i inkommande requests
+// Middlewar
+app.use(cors()); 
+app.use(express.json()); 
 
 // Routes
 app.use('/api/movies', moviesRouter);
 
-// Health check-endpoint
+// check-endpoint
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({
     status: 'ok',
@@ -45,7 +45,7 @@ app.get('/', (req: Request, res: Response) => {
   });
 });
 
-// 404-hanterare (okänd route)
+// 404-hanterare
 app.use((req: Request, res: Response) => {
   res.status(404).json({
     error: 'Not Found',
@@ -54,8 +54,7 @@ app.use((req: Request, res: Response) => {
   });
 });
 
-// Felhanterare (serverfel)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// Felhanterare 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error('Server error:', err);
   res.status(500).json({

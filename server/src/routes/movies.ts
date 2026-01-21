@@ -54,7 +54,7 @@ interface StatsResponse {
 /**
  * GET /api/movies
  * Hämta alla filmer
- * Query params: ?status=watchlist|watched
+ * Query params status=watchlist|watched
  */
 router.get('/', (req: Request, res: Response) => {
   try {
@@ -84,7 +84,7 @@ router.get('/', (req: Request, res: Response) => {
 });
 
 /**
- * GET /api/movies/:id
+ * GET /api/movies/ id
  * Hämta en specifik film via ID
  */
 router.get('/:id', (req: Request, res: Response) => {
@@ -115,7 +115,7 @@ router.get('/:id', (req: Request, res: Response) => {
 /**
  * POST /api/movies
  * Lägg till en ny film (i watchlist eller watched)
- * Body: { tmdb_id, title, poster_path, release_date, vote_average, overview, status, personal_rating?, review?, is_favorite?, date_watched? }
+ * Body: { tmdb_id, title, poster_path, release_date, vote_average, overview, status, personal_rating, review, is_favorite, date_watched }
  */
 router.post('/', (req: Request<unknown, unknown, CreateMovieBody>, res: Response) => {
   try {
@@ -208,7 +208,7 @@ router.post('/', (req: Request<unknown, unknown, CreateMovieBody>, res: Response
 /**
  * PUT /api/movies/:id
  * Uppdatera en film (t.ex. flytta från watchlist till watched, uppdatera betyg/recension)
- * Body: { status?, personal_rating?, review?, is_favorite?, date_watched? }
+ * Body: { status, personal_rating, review, is_favorite, date_watched }
  */
 router.put('/:id', (req: Request<{ id: string }, unknown, UpdateMovieBody>, res: Response) => {
   try {
@@ -251,7 +251,7 @@ router.put('/:id', (req: Request<{ id: string }, unknown, UpdateMovieBody>, res:
       }
     }
 
-    // Bygg upp en dynamisk UPDATE-query baserat på vilka fält som skickats in
+    // Bygg upp en dynamisk UPDATEquery baserat på vilka fält som skickats in
     const updates: string[] = [];
     const params: unknown[] = [];
 

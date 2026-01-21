@@ -52,8 +52,6 @@ class Store {
     this.isLoadingPopular = true;
 
     try {
-      console.log("[TMDB] loading popular page:", page); // ✅ DEBUG
-
       const results = await getPopularMoviesTMDB(page);
 
       const existingIds = new Set(this.popularMovies.map((m) => m.id));
@@ -65,15 +63,12 @@ class Store {
 
       this.popularMovies = merged;
       this.popularPageLoaded = Math.max(this.popularPageLoaded, page);
-
-      console.log("[TMDB] total popular movies:", this.popularMovies.length); // ✅ DEBUG
-    } catch (error) {
-      console.error("Failed to load popular page:", error);
     } finally {
       this.isLoadingPopular = false;
     }
   }
 
+  //   50 till 100  att hämta fler sidor men tanken att 20 filmer på en sidan
   async ensurePopularCount(minCount: number) {
     if (this.isSearching) return;
 
@@ -90,7 +85,7 @@ class Store {
       await this.loadPopularMoviesPage(p);
     }
 
-    // r
+    
   }
 
   setRenderCallback(cb: () => void) {

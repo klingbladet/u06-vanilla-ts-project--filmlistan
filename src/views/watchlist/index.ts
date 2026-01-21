@@ -59,7 +59,7 @@ export default function watchlist(): HTMLElement {
       clearBtn.textContent ="Clearing...";
       try {
         await Promise.all(watchlistMovies.map(movie => deleteMovie(movie.id)));
-        showEmptyMessage(); // Update UI without reloading
+        showEmptyMessage(); 
       }
       catch (error) {
         console.error("Failed to clear watchlist", error);

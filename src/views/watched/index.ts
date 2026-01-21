@@ -2,7 +2,7 @@ import { getMovies } from "../../services/movieApi";
 import type { DatabaseMovie } from "../../types/movie";
 import { reviewComponent } from "../../components/review-rating";
 import { ratingComponent } from "../../components/review-rating";
-import { deleteButtonComponent } from "../../components/buttons"; // Corrected import
+import { deleteButtonComponent } from "../../components/buttons"; 
 
 export default function watched(): HTMLElement {
   const container = document.createElement("div");
@@ -31,17 +31,17 @@ export default function watched(): HTMLElement {
   container.appendChild(loadingMessage);
   container.appendChild(grid);
 
-  //Load movies asynchronously
+  // movies asynchronously
   getMovies().then((movies: DatabaseMovie[]) => {
     loadingMessage.remove();
-    //Filter so that this page is different from watchlist.
+    //Filter sidor blir olika från watchlist.
     const watchedMovies = movies.filter(movies => movies.status === 'watched');
     
     if (watchedMovies.length === 0) {
       showEmptyMessage();
       return;
     }
-    //Render the movies
+    //Render movies
     watchedMovies.forEach((movie) => {
       const card = document.createElement("div");
       card.className = "movie-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow relative"; // Added 'relative'
@@ -56,7 +56,7 @@ export default function watched(): HTMLElement {
       img.className = "w-full h-auto";
 
       const contentDiv = document.createElement('div');
-      contentDiv.className = "p-4 flex flex-col pt-8"; // Added pt-8 to give space for the button
+      contentDiv.className = "p-4 flex flex-col pt-8"; 
 
       const titleEl = document.createElement('h3');
       titleEl.className = "font-bold text-lg mb-2";
@@ -74,7 +74,7 @@ export default function watched(): HTMLElement {
       watchedOn.className = "text-xs text-gray-400 mt-2";
       watchedOn.textContent = `Watched on: ${movie.date_watched || 'Unknown'}`;
       
-      const deleteButton = deleteButtonComponent(movie.id, () => { // Corrected usage
+      const deleteButton = deleteButtonComponent(movie.id, () => {
         card.remove();
         if (grid.children.length === 0) {
           showEmptyMessage();

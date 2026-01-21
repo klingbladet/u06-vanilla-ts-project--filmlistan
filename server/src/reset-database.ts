@@ -21,7 +21,7 @@ const db = new Database(dbPath);
 // Slå på foreign keys
 db.pragma('foreign_keys = ON');
 
-// Skapa tabeller (en databas per projekt, ingen användaruppdelning)
+// Skap tabeller (en databas per projekt, ingen användaruppdelning)
 const createMoviesTable = `
   CREATE TABLE IF NOT EXISTS movies (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "typescript": "~5.9.3",
     "vite": "^7.2.4"
   },
@@ -16,6 +17,7 @@
   "main": "index.js",
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
+    "better-sqlite3": "^12.6.2",
     "esbuild": "^0.25.12",
     "fdir": "^6.5.0",
     "nanoid": "^3.3.11",

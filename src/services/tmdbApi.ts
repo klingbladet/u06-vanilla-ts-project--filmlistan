@@ -1,30 +1,48 @@
-// API-anrop till TMDB API
-import type { TMDBMovie } from "../types/movie.ts";
+import type { TMDBMovie } from "../types/movie";
 
-const API_KEY = '85a4b73dc7961b2d832676f9a6dab604';
+const TMDB_BASE_URL = "https://api.themoviedb.org/3";
+const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
-const BASE_URL = 'https://api.themoviedb.org/3';
-export const TMBD_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
+//  ska visa true i console
+console.log("[TMDB] API KEY exists?", Boolean(TMDB_API_KEY));
 
-export async function getPopularMoviesTMDB(): Promise<TMDBMovie[]> {
-  const response = await fetch (`${BASE_URL}/movie/popular?api_key=${API_KEY}&language=en-US&page=1`);
-  if (!response.ok) {
-    throw new Error('Kunde inte hämta populära filmer');
+async function tmdbFetch<T>(
+  path: string,
+  params: Record<string, string | number> = {}
+): Promise<T> {
+  if (!TMDB_API_KEY) {
+    throw new Error(
+      "VITE_TMDB_API_KEY saknas i .env (glöm inte starta om npm run dev)."
+    );
   }
-// TMBD Return array in "results" 
-  const data = await response.json();
-  return data.results;
+
+  const url = new URL(`${TMDB_BASE_URL}${path}`);
+  url.searchParams.set("api_key", TMDB_API_KEY);
+  url.searchParams.set("language", "sv-SE");
+
+  for (const [k, v] of Object.entries(params)) {
+    url.searchParams.set(k, String(v));
+  }
+
+  const res = await fetch(url.toString());
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`TMDB error ${res.status}: ${text}`);
+  }
+
+  return (await res.json()) as T;
 }
 
-export async function searchMoviesTMDB(query: string): Promise<TMDBMovie[]> {
-  if (!query) return [];
+export async function getPopularMoviesTMDB(page: number = 1): Promise<TMDBMovie[]> {
+  const data = await tmdbFetch<{ results: TMDBMovie[] }>("/movie/popular", { page });
+  return data.results ?? [];
+}
 
-  const response = await fetch (`${BASE_URL}/search/movie?api_key=${API_KEY}&language=en-US&query=${
-    encodeURIComponent(query)}&page=1`);
-
-    if (!response.ok) {
-      throw new Error ('Kunde inte söka efter filmer');
-    }
-    const data = await response.json();
-    return data.results;
+export async function searchMoviesTMDB(query: string, page: number = 1): Promise<TMDBMovie[]> {
+  const data = await tmdbFetch<{ results: TMDBMovie[] }>("/search/movie", {
+    query,
+    page,
+    include_adult: "false",
+  });
+  return data.results ?? [];
 }

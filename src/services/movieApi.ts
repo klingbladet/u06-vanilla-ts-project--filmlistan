@@ -1,5 +1,5 @@
 // API-anrop till Movie API
-import type { DatabaseMovie, CreateMovieBody } from "../types/movie";
+import type { DatabaseMovie, TMDBMovie } from "../types/movie";
 
 const API_BASE_URL = "http://localhost:3000/api";
 const USER_ID = "Chas-n-Chill";
@@ -9,9 +9,31 @@ const headers: Record<string, string> = {
   "x-user-id": USER_ID,
 };
 
+/**
+ * Body-typen som backend accepterar (matchar server/src/routes/movies.ts)
+ * jag gör den lokalt här så ni inte får fel om CreateMovieBody saknas i types/movie.ts.
+ */
+type CreateMovieBody = {
+  tmdb_id: number;
+  title: string;
+  poster_path?: string | null;
+  release_date?: string | null;
+  vote_average?: number | null;
+  overview?: string | null;
+  status: "watchlist" | "watched";
+  personal_rating?: number | null;
+  review?: string | null;
+  is_favorite?: boolean;
+  date_watched?: string | null;
+};
+
 export async function getMovies(): Promise<DatabaseMovie[]> {
   const response = await fetch(`${API_BASE_URL}/movies`, { headers });
-  if (!response.ok) throw new Error("Kunde inte hämta filmerna");
+
+  if (!response.ok) {
+    throw new Error("Kunde inte hämta filmerna");
+  }
+
   return await response.json();
 }
 
@@ -23,12 +45,12 @@ export async function addMovie(movie: CreateMovieBody): Promise<DatabaseMovie> {
   });
 
   if (!response.ok) {
-    let errorMsg = "Kunde inte spara filmen";
+    let msg = "Kunde inte spara filmen";
     try {
       const errorData = await response.json();
-      errorMsg = errorData.error || errorMsg;
+      msg = errorData.error || msg;
     } catch {}
-    throw new Error(errorMsg);
+    throw new Error(msg);
   }
 
   return await response.json();
@@ -45,12 +67,12 @@ export async function updateMovie(
   });
 
   if (!response.ok) {
-    let errorMsg = "Kunde inte uppdatera filmen!";
+    let msg = "Kunde inte uppdatera filmen!";
     try {
       const errorData = await response.json();
-      errorMsg = errorData.error || errorMsg;
+      msg = errorData.error || msg;
     } catch {}
-    throw new Error(errorMsg);
+    throw new Error(msg);
   }
 
   return await response.json();
@@ -61,46 +83,42 @@ export async function deleteMovie(id: number): Promise<void> {
     method: "DELETE",
     headers,
   });
-  if (!response.ok) throw new Error("Kunde inte ta bort filmen");
+
+  if (!response.ok) {
+    throw new Error("Kunde inte ta bort filmen");
+  }
 }
 
 /**
- * SMART helper:
- * - Om filmen finns i DB (matchar tmdb_id) => PUT /movies/:id (uppdatera status)
- * - Annars => POST /movies (lägg till)
+ * Skapar eller uppdaterar en film baserat på tmdb_id
+ * - Finns inte filmen → POST
+ * - Finns filmen → PUT (uppdatera status)
  */
 export async function upsertMovieStatusByTmdbId(args: {
-  tmdbMovie: {
-    id: number;
-    title: string;
-    poster_path?: string | null;
-    release_date?: string | null;
-    vote_average?: number | null;
-    overview?: string | null;
-  };
+  tmdbMovie: TMDBMovie;
   status: "watchlist" | "watched";
-  existingDbMovie?: DatabaseMovie | undefined;
+  existingDbMovie?: DatabaseMovie;
 }): Promise<DatabaseMovie> {
   const { tmdbMovie, status, existingDbMovie } = args;
 
-  // Om filmen redan finns: uppdatera den
+  // Om filmen redan finns  uppdatera
   if (existingDbMovie) {
-    return await updateMovie(existingDbMovie.id, {
+    return updateMovie(existingDbMovie.id, {
       status,
-      // Sätt date_watched om man markerar watched
       date_watched: status === "watched" ? new Date().toISOString() : null,
     });
   }
 
-  // Annars: skapa ny
-  return await addMovie({
+  // Annars  skapa ny
+  return addMovie({
     tmdb_id: tmdbMovie.id,
     title: tmdbMovie.title,
-    poster_path: tmdbMovie.poster_path ?? "",
-    release_date: tmdbMovie.release_date ?? "",
-    overview: tmdbMovie.overview ?? "",
+    poster_path: tmdbMovie.poster_path ?? null,
+    release_date: tmdbMovie.release_date ?? null,
+    overview: tmdbMovie.overview ?? null,
+    // vote_average  valfri. Du kan spara den om du vill:
+    vote_average: Number.isFinite(tmdbMovie.vote_average) ? tmdbMovie.vote_average : null,
     status,
     date_watched: status === "watched" ? new Date().toISOString() : null,
   });
-  
 }
