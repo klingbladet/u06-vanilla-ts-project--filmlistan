@@ -266,7 +266,6 @@ export default function home(): HTMLElement {
       return;
     }
 
-    if (fullList.length === 0) {
     if (fullList.length === 0) { // fullList is now already filtered
       // Visa olika meddelanden beroende på vilken vy som är aktiv
       let emptyMessage = "Inget att visa här ännu.";
@@ -317,10 +316,6 @@ export default function home(): HTMLElement {
     page = 1;
     setChipActiveStyles();
 
-    if (store.isSearching) {
-      setHeading(`Resultat för "${store.currentSearchQuery}"`);
-      fullList = store.searchResults;
-      isLoading = false;
     let baseList: TMDBMovie[] = [];
 
     if (store.isSearching) {
@@ -738,6 +733,4 @@ function heartBurstAt(btn: HTMLElement) {
   document.body.appendChild(el);
 
   setTimeout(() => el.remove(), 700);
-}
-}
 }
