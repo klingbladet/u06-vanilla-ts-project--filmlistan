@@ -1,72 +1,78 @@
-import type { TMDBMovie, DatabaseMovie } from "../../types/movie";
-import { store, loadPopularMovies, ensurePopularCount } from "../../lib/store";
+import type { TMDBMovie, DatabaseMovie, Genre } from "../../types/movie"; // Merged import: added Genre
+import { store, loadPopularMovies, loadRecommendations, ensurePopularCount } from "../../lib/store"; // Merged import: added loadRecommendations, ensurePopularCount
 import { SearchComponent } from "../../components/search";
+import createMovieModal from "../../components/Modal";
 import { getMovies, upsertMovieStatusByTmdbId } from "../../services/movieApi";
 import { isLoggedIn } from "../../lib/auth";
 import { getFavorites, isFavorite, toggleFavorite } from "../../lib/favorites";
 import { Icons } from "../../components/icons";
+import { getGenres } from '../../services/tmdbApi'; // Keep getGenres
+import { createFilterComponent } from '../../components/filter'; // Keep createFilterComponent
 
 export default function home(): HTMLElement {
   const container = document.createElement("div");
-  container.className = "min-h-screen bg-zinc-950 text-white";
+  container.className = "home-view p-4 max-w-7xl mx-auto";
 
+  // Hero Image / Banner
+  const heroImage = document.createElement("img");
+  heroImage.className = "mb-6 h-64 w-full rounded-2xl object-cover border border-white/10 bg-black/40 shadow-inner brightness-70";
+  heroImage.src = "/img/banner/dune-2-banner-1.jpg"; 
+  heroImage.alt = "Blade Runner Hero Banner";
+
+  const heroImages = [
+    { src: "/img/banner/bladerunner-banner.jpg", alt: "Blade Runner Hero"},
+    { src: "/img/banner/dune-2-banner-1.jpg", alt: "Dune 2 Banner 1"},
+    { src: "/img/banner/dune-2-banner-2.jpg", alt: "Dune 2 Banner 2"},
+    { src: "/img/banner/killers-of-the-flower-moon-banner.jpg", alt: "Killers of the flower Moon Banner"},
+  ];
+
+  const updateHeroImage= (imgElement: HTMLImageElement) => {
+    const currentHour = new Date().getSeconds();
+    const imageIndex = currentHour % heroImages.length;
+    const selectedImage = heroImages[imageIndex]
+
+    imgElement.src = selectedImage.src;
+    imgElement.alt = selectedImage.alt;
+  };
+
+  updateHeroImage(heroImage)
+
+  setInterval(() => updateHeroImage(heroImage), 100000);
+
+  container.appendChild(heroImage);
+
+  // Lägg till sökfältet högst upp
+  container.appendChild(SearchComponent());
+
+  // Inner wrapper för hela innehållet
   const inner = document.createElement("div");
-  inner.className = "max-w-7xl mx-auto px-4 py-6";
+  inner.className = "space-y-4";
   container.appendChild(inner);
 
-  
-  const hero = document.createElement("section");
-  hero.className =
-    "relative overflow-hidden rounded-2xl bg-gradient-to-r from-zinc-900 via-zinc-950 to-zinc-900 ring-1 ring-white/10";
-  hero.innerHTML = `
-    <div class="p-6 md:p-10">
-      <div class="inline-flex items-center rounded-lg bg-amber-400 px-3 py-1 text-xs font-extrabold tracking-wide text-black">
-        FILMKOLLEN
-      </div>
-
-      <h1 class="mt-4 text-3xl md:text-5xl font-extrabold tracking-tight">
-        Hitta något att titta på.
-        <span class="text-amber-400">Spara</span> dina favoriter.
-      </h1>
-
-      <p class="mt-3 max-w-2xl text-zinc-300">
-        Sök filmer och spara i Watchlist, Favoriter eller markera som Watched.
-      </p>
-    </div>
-
-    <!-- cinema fade -->
-    <div class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-zinc-950/90 to-transparent"></div>
-  `;
-  inner.appendChild(hero);
-
-  /* - SEARCH - */
-  const searchWrap = document.createElement("div");
-  searchWrap.className = "mt-6";
-  searchWrap.appendChild(SearchComponent());
-  inner.appendChild(searchWrap);
-
-  /* - CHIPS - */
-  const chips = document.createElement("div");
-  chips.className = "mt-4 flex flex-wrap items-center gap-2";
-  const chipBase =
-    "rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/80 transition hover:bg-white/10 hover:text-white";
-  chips.innerHTML = `
-    <button data-chip="popular" class="${chipBase} bg-amber-400 text-black border-amber-400 hover:bg-amber-300">Popular</button>
-    <button data-chip="watchlist" class="${chipBase}">My Watchlist</button>
-    <button data-chip="watched" class="${chipBase}">Watched</button>
-    <button data-chip="favorites" class="${chipBase}">Favoriter</button>
-  `;
-  inner.appendChild(chips);
-
-  
+  // Top row med rubrik, chips och kontroller
   const topRow = document.createElement("div");
-  topRow.className = "mt-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between";
+  topRow.className = "flex flex-wrap items-center justify-between gap-4";
   inner.appendChild(topRow);
 
+  // Rubrik (sätts dynamiskt av setHeading) - from dev
   const heading = document.createElement("h2");
-  heading.className = "flex items-center gap-3 text-xl md:text-2xl font-extrabold";
+  heading.className = "flex items-center gap-3 text-xl font-bold text-white";
   topRow.appendChild(heading);
 
+  // Chips för att filtrera (Popular, Rekommenderat) - from dev
+  const chips = document.createElement("div");
+  chips.className = "flex flex-wrap gap-2";
+  chips.innerHTML = `
+    <button data-chip="popular" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold transition bg-amber-400 text-black border-amber-400 hover:bg-amber-300">
+      Populära
+    </button>
+    <button data-chip="recommendations" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold transition bg-white/5 text-white/80">
+      ⭐ Rekommenderat
+    </button>
+  `;
+  topRow.appendChild(chips);
+
+  // Kontroller (per sida dropdown + page info) - from dev
   const controls = document.createElement("div");
   controls.className = "flex flex-wrap items-center gap-3";
   controls.innerHTML = `
@@ -112,11 +118,37 @@ export default function home(): HTMLElement {
     <div class="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-zinc-950 to-transparent"></div>
   `;
 
+  // --- Start Filter Component Re-integration ---
+  // Skapa en temporär placeholder för filtren som visas medan de laddas
+  const filterContainerPlaceholder = document.createElement('div');
+  filterContainerPlaceholder.className = "mt-6 text-center text-zinc-400"; // Lägg till lite stil
+  filterContainerPlaceholder.textContent = 'Laddar filter...';
+  inner.appendChild(filterContainerPlaceholder); // Lägg till placeholder på sidan
+
+  // Hämta genrerna och, när de är klara, skapa och visa filter-komponenten
+  let allGenres: Genre[] = []; // This was already declared in dev but not initialized. Now it is.
+  getGenres()
+    .then(genres => {
+      allGenres = genres; // Spara genrerna i din allGenres-variabel
+      const filterUI = createFilterComponent(allGenres); // Skapa filter-UI med de hämtade genrerna
+      filterContainerPlaceholder.replaceWith(filterUI); // Ersätt placeholder med det riktiga filter-UI:et
+      // After filter component is added, we should trigger a re-render to apply any default filters.
+      // Assuming store.triggerRender() or similar is watched by the main app loop.
+      // For now, let's just build the list based on potentially pre-set filters.
+      buildFullListForCurrentView();
+    })
+    .catch(error => {
+      console.error("Kunde inte ladda genrer:", error);
+      filterContainerPlaceholder.textContent = 'Kunde inte ladda filter.'; // Visa felmeddelande om det misslyckas
+    });
+  // --- End Filter Component Re-integration ---
+
+  // Grid - from dev
   const grid = document.createElement("div");
   grid.className = "grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5";
   gridWrap.appendChild(grid);
 
-  /* - sidor - */
+  // Pager - from dev
   const pager = document.createElement("div");
   pager.className = "mt-6 flex items-center justify-between";
   pager.innerHTML = `
@@ -132,14 +164,14 @@ export default function home(): HTMLElement {
   const prevBtn = pager.querySelector<HTMLButtonElement>("#prevBtn")!;
   const nextBtn = pager.querySelector<HTMLButtonElement>("#nextBtn")!;
 
-  /* -STATE - */
-  let activeChip: "popular" | "watchlist" | "watched" | "favorites" = "popular";
-  let perPage = perPageInit;
+  let activeChip: "popular" | "recommendations" | "favorites" = "popular";
+  let perPage = Number(pageSizeSelect.value);
   let page = 1;
 
   let fullList: TMDBMovie[] = [];
   let savedMovies: DatabaseMovie[] = [];
   let isLoading = false;
+  // allGenres is declared above with the filter integration.
 
   const findDbMovieByTmdbId = (tmdbId: number) =>
     savedMovies.find((m) => m.tmdb_id === tmdbId);
@@ -151,8 +183,10 @@ export default function home(): HTMLElement {
     `;
   };
 
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
   const updatePagerUI = () => {
-    const total = fullList.length;
+    const total = fullList.length; // Uses filtered list length
     const totalPages = Math.max(1, Math.ceil(total / perPage));
     if (page > totalPages) page = totalPages;
 
@@ -201,6 +235,27 @@ export default function home(): HTMLElement {
       grid.appendChild(sk);
     }
   }
+  const applyFilters = (movies: TMDBMovie[]): TMDBMovie[] => {
+    const { genres, rating } = store.activeFilters;
+    let filtered = movies;
+
+    // Apply rating filter
+    if (rating.over7) {
+      filtered = filtered.filter(movie => movie.vote_average >= 7);
+    }
+
+    // Apply genre filter
+    if (genres.length > 0) {
+      // Filter for movies that have AT LEAST ONE of the selected genres.
+      // If `store.activeFilters.genres` contains IDs [28, 12] (Action, Adventure),
+      // a movie with genre_ids [28, 80] (Action, Crime) would match.
+      filtered = filtered.filter(movie =>
+        genres.some(genreId => (movie.genre_ids || []).includes(genreId)) // Assuming movie.genre_ids exists
+      );
+    }
+    return filtered;
+  };
+
 
   const render = () => {
     grid.innerHTML = "";
@@ -212,9 +267,22 @@ export default function home(): HTMLElement {
     }
 
     if (fullList.length === 0) {
+    if (fullList.length === 0) { // fullList is now already filtered
+      // Visa olika meddelanden beroende på vilken vy som är aktiv
+      let emptyMessage = "Inget att visa här ännu.";
+
+      if (activeChip === "recommendations") {
+        emptyMessage = "Inga rekommendationer ännu. Lägg till filmer i din Watchlist eller markera filmer som Watched för att få personliga rekommendationer!";
+      } else if (store.isSearching && store.searchResults.length === 0) {
+        emptyMessage = `Inga resultat för "${store.currentSearchQuery}".`;
+      } else if (store.activeFilters.genres.length > 0 || store.activeFilters.rating.over7) {
+        emptyMessage = "Inga filmer matchade dina filterkriterier.";
+      }
+
+
       grid.innerHTML = `
         <div class="col-span-full rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-sm text-white/70">
-          Inget att visa här ännu.
+          ${emptyMessage}
         </div>`;
       updatePagerUI();
       return;
@@ -253,6 +321,13 @@ export default function home(): HTMLElement {
       setHeading(`Resultat för "${store.currentSearchQuery}"`);
       fullList = store.searchResults;
       isLoading = false;
+    let baseList: TMDBMovie[] = [];
+
+    if (store.isSearching) {
+      setHeading(`Resultat för "${store.currentSearchQuery}"`);
+      baseList = store.searchResults;
+      setChipActiveStyles();
+      fullList = applyFilters(baseList); // Apply filters here
       render();
       return;
     }
@@ -276,62 +351,82 @@ export default function home(): HTMLElement {
       setHeading("Mina favoriter");
       fullList = getFavorites();
       isLoading = false;
+      try {
+        if (store.popularMovies.length === 0) await loadPopularMovies(false);
+
+        await ensurePopularCount(perPage); // Ensure enough popular movies
+        baseList = store.popularMovies;
+      } catch (error) {
+        console.error("Kunde inte ladda populära filmer:", error);
+        baseList = [];
+      }
+      setChipActiveStyles();
+      fullList = applyFilters(baseList); // Apply filters here
       render();
       return;
     }
 
-    if (activeChip === "watchlist") {
-      setHeading("Min Watchlist");
-      const list = savedMovies.filter((m) => m.status === "watchlist");
-      fullList = list.map((m) => ({
-        id: m.tmdb_id,
-        title: m.title,
-        poster_path: m.poster_path ?? "",
-        release_date: m.release_date ?? "",
-        vote_average: m.vote_average ?? 0,
-        overview: m.overview ?? "",
-      })) as unknown as TMDBMovie[];
-      isLoading = false;
+    if (activeChip === "recommendations") {
+      setHeading("⭐ Rekommenderat för dig");
+
+      try {
+        if (store.recommendations.length === 0) {
+          await loadRecommendations();
+        }
+
+        if (store.recommendations.length > 0) {
+          baseList = store.recommendations;
+        } else {
+          baseList = [];
+        }
+      } catch (error) {
+        console.error("Kunde inte ladda rekommendationer:", error);
+        baseList = [];
+      }
+
+      setChipActiveStyles();
+      fullList = applyFilters(baseList); // Apply filters here
       render();
       return;
     }
-
-    setHeading("Watched");
-    const list = savedMovies.filter((m) => m.status === "watched");
-    fullList = list.map((m) => ({
-      id: m.tmdb_id,
-      title: m.title,
-      poster_path: m.poster_path ?? "",
-      release_date: m.release_date ?? "",
-      vote_average: m.vote_average ?? 0,
-      overview: m.overview ?? "",
-    })) as unknown as TMDBMovie[];
-    isLoading = false;
-    render();
   };
 
+  // --- Start Filter update trigger ---
+  // Listen for the custom event dispatched by filter.ts
+  document.addEventListener('filterchange', () => {
+    buildFullListForCurrentView();
+    scrollToTop();
+  });
+  // --- End Filter update trigger ---
+
+
+  // Load DB movies
   getMovies()
     .then((dbMovies) => {
       savedMovies = dbMovies;
-      buildFullListForCurrentView();
+      buildFullListForCurrentView(); // Initial build after DB movies loaded
     })
-    .catch(() => buildFullListForCurrentView());
+    .catch(() => buildFullListForCurrentView()); // Fallback if DB movies fail
 
-  buildFullListForCurrentView();
+  // Initial call, ensure it's made after genres are loaded
+  // buildFullListForCurrentView(); // Moved into getGenres.then() and getMovies.then()
 
-  chips.addEventListener("click", (e) => {
+  // event listeners from dev
+  chips.addEventListener("click", async(e) => {
     const btn = (e.target as HTMLElement).closest("button");
     if (!btn) return;
     const chip = btn.dataset.chip as typeof activeChip | undefined;
     if (!chip) return;
     activeChip = chip;
-    buildFullListForCurrentView();
+    await buildFullListForCurrentView();
+    scrollToTop();
   });
 
   pageSizeSelect.addEventListener("change", () => {
     perPage = Number(pageSizeSelect.value);
     localStorage.setItem("filmkollen_perPage", String(perPage));
     buildFullListForCurrentView();
+    scrollToTop();
   });
 
   sortSelect.addEventListener("change", () => {
@@ -343,22 +438,27 @@ export default function home(): HTMLElement {
     if (prevBtn.disabled) return;
     page -= 1;
     render();
+    scrollToTop();
   });
 
   nextBtn.addEventListener("click", async () => {
     if (nextBtn.disabled) return;
     const nextPage = page + 1;
 
+    // hämta flera sidor om det behövs tills nästa
     if (!store.isSearching && activeChip === "popular") {
       isLoading = true;
       render();
       await ensurePopularCount(nextPage * perPage);
       fullList = store.popularMovies;
       isLoading = false;
+      // After ensuring count, re-build and filter the list
+      await buildFullListForCurrentView();
     }
 
     page = nextPage;
     render();
+    scrollToTop();
   });
 
   // Click favorite / watchlist / watched
@@ -421,36 +521,31 @@ export default function home(): HTMLElement {
   });
 
   return container;
-}
 
-function createMovieCard(movie: TMDBMovie, dbMovie?: DatabaseMovie): HTMLElement {
-  const card = document.createElement("article");
-  card.className =
-    "group overflow-hidden rounded-2xl bg-zinc-900/60 ring-1 ring-white/10 transition hover:ring-white/20";
+  function createMovieCard(movie: TMDBMovie, dbMovie?: DatabaseMovie): HTMLElement {
+    const card = document.createElement("article");
+    card.className =
+      "group overflow-hidden rounded-2xl bg-zinc-900/60 ring-1 ring-white/10 transition hover:ring-white/20";
 
-  const imageUrl = movie.poster_path
-    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-    : "https://placehold.co/500x750?text=No+Image";
+    const imageUrl = movie.poster_path
+      ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+      : "https://placehold.co/500x750?text=No+Image";
 
-  const status = dbMovie?.status;
   const fav = isFavorite(movie.id);
 
-  const watchlistDisabled = Boolean(dbMovie);
-  const watchedDisabled = status === "watched";
+    const isSaved = !!dbMovie;
+    const isWatchlist = dbMovie?.status === "watchlist";
+    const isWatched = dbMovie?.status === "watched";
 
-  const rating = Number.isFinite(movie.vote_average) ? movie.vote_average.toFixed(1) : "0.0";
-  const release = movie.release_date ?? "";
+    const watchlistDisabled = isSaved;
+    const watchedDisabled = isWatched;
 
-  const badge =
-    status === "watchlist"
-      ? `<span class="rounded-full bg-emerald-400 px-2 py-1 text-[10px] font-bold text-black">WATCHLIST</span>`
-      : status === "watched"
-      ? `<span class="rounded-full bg-amber-400 px-2 py-1 text-[10px] font-bold text-black">WATCHED</span>`
-      : fav
-      ? `<span class="rounded-full bg-rose-500 px-2 py-1 text-[10px] font-bold text-white">FAVORIT</span>`
-      : "";
+    const watchedLabel = isWatchlist ? "Mark as watched" : isWatched ? "watched ✅" : "✓ Watched";
 
-  card.innerHTML = `
+    const rating = Number.isFinite(movie.vote_average) ? movie.vote_average.toFixed(1) : "0.0";
+    const release = movie.release_date ?? "";
+
+    card.innerHTML = `
     <div class="relative aspect-[2/3] bg-zinc-800">
       <img src="${imageUrl}" alt="${movie.title}" loading="lazy"
         class="h-full w-full object-cover opacity-0 transition duration-500 group-hover:scale-[1.03]" />
@@ -461,7 +556,6 @@ function createMovieCard(movie: TMDBMovie, dbMovie?: DatabaseMovie): HTMLElement
           ${Icons.starSolid({ className: "h-3.5 w-3.5 text-amber-400" })}
           ${rating}
         </span>
-        ${badge}
       </div>
 
       <div class="absolute inset-x-0 bottom-0 p-3 opacity-0 translate-y-2 transition group-hover:opacity-100 group-hover:translate-y-0">
@@ -485,6 +579,7 @@ function createMovieCard(movie: TMDBMovie, dbMovie?: DatabaseMovie): HTMLElement
               ${watchedDisabled ? "disabled" : ""}
               class="flex-1 rounded-lg px-2 py-2 text-[11px] font-semibold transition
                 ${watchedDisabled ? "bg-white/10 text-white/50 cursor-not-allowed" : "bg-amber-400 text-black hover:bg-amber-300"}">
+                ${watchedLabel}
               <span class="inline-flex items-center justify-center gap-2">
                 ${Icons.check({ className: "h-4 w-4" })}
                 Watched
@@ -515,10 +610,105 @@ function createMovieCard(movie: TMDBMovie, dbMovie?: DatabaseMovie): HTMLElement
     </div>
   `;
 
-  const img = card.querySelector("img")!;
-  img.addEventListener("load", () => img.classList.remove("opacity-0"));
+    const img = card.querySelector("img")!;
+    img.addEventListener("load", () => img.classList.remove("opacity-0"));
 
-  return card;
+    // --- NEW LOCAL LOGIC START ---
+    const watchlistBtn = card.querySelector('button[data-action="watchlist"]') as HTMLButtonElement;
+    const watchedBtn = card.querySelector('button[data-action="watched"]') as HTMLButtonElement;
+
+    const handleAction = async (btn: HTMLButtonElement, action: "watchlist" | "watched") => {
+      // Check local dbMovie state directly
+      if (dbMovie?.status === "watched") {
+        showToast("Filmen är redan Watched");
+        return;
+      }
+
+      const originalText = btn.textContent ?? "";
+      btn.textContent = "Sparar...";
+      btn.disabled = true;
+
+      try {
+        const updated = await upsertMovieStatusByTmdbId({
+          tmdbMovie: movie,
+          status: action,
+          existingDbMovie: dbMovie,
+        });
+
+        // Update global list
+        const idx = savedMovies.findIndex((m) => m.tmdb_id === updated.tmdb_id);
+        if (idx >= 0) savedMovies[idx] = updated;
+        else savedMovies.push(updated);
+
+        showToast(action === "watchlist" ? "Sparad i Watchlist ✔" : "Markerad som Watched ✅");
+
+        // Update UI locally without full re-render
+        if (action === "watchlist") {
+          btn.textContent = "Saved";
+          btn.classList.add("bg-white/10", "text-white/50", "cursor-not-allowed");
+          btn.classList.remove("bg-emerald-400", "text-black", "hover:bg-emerald-300");
+          // Update local scope
+          dbMovie = updated;
+        } else { // watched
+          btn.textContent = "Watched ✅";
+          btn.classList.add("bg-white/10", "text-white/50", "cursor-not-allowed");
+          btn.classList.remove("bg-amber-400", "text-black", "hover:bg-amber-300");
+
+          watchlistBtn.disabled = true;
+          watchlistBtn.classList.add("bg-white/10", "text-white/50", "cursor-not-allowed");
+          watchlistBtn.textContent = "Saved";
+          // Update local scope
+          dbMovie = updated;
+        }
+
+      } catch (err) {
+        console.error(err);
+        btn.disabled = false;
+        btn.textContent = originalText;
+        showToast("Något gick fel", false);
+      }
+    };
+
+    watchlistBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      handleAction(watchlistBtn, "watchlist");
+    });
+
+    watchedBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      handleAction(watchedBtn, "watched");
+    });
+    // --- NEW LOCAL LOGIC END ---
+
+    card.addEventListener("click", (e) => {
+      if((e.target as HTMLElement).closest("button")) return;
+      // Convert DatabaseMovie to TMDBMovie structure for the modal
+      const tmdbFormat = {
+        id: movie.id,
+        title: movie.title,
+        overview: movie.overview || "",
+        poster_path: movie.poster_path || "",
+        release_date: movie.release_date || "",
+        vote_average: movie.vote_average || 0,
+        genre_ids: movie.genre_ids || [],
+      };
+
+      const { modal, openModal } = createMovieModal(tmdbFormat, dbMovie, (updatedMovie) => {
+        const idx = savedMovies.findIndex((m) => m.id === updatedMovie.id)
+        if (idx >= 0) {
+          savedMovies[idx] = updatedMovie;
+        } else {
+          savedMovies.push(updatedMovie)
+        }
+        buildFullListForCurrentView(); // Re-render after modal update
+      });
+
+      document.body.appendChild(modal);
+      openModal();
+    });
+
+    return card;
+  }
 }
 
 function showToast(message: string, success = true) {
@@ -548,4 +738,6 @@ function heartBurstAt(btn: HTMLElement) {
   document.body.appendChild(el);
 
   setTimeout(() => el.remove(), 700);
+}
+}
 }

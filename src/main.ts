@@ -5,6 +5,8 @@ import { isLoggedIn, logout, getUser } from "./lib/auth";
 import headerHTML from "./views/static/header/index.html?raw";
 import footerHTML from "./views/static/footer/index.html?raw";
 
+
+// Dynamiska sidor
 import home from "./views/home/index.ts";
 import watchlist from "./views/watchlist/index.ts";
 import watched from "./views/watched/index.ts";

@@ -1,4 +1,5 @@
-import type { TMDBMovie } from "../types/movie";
+// API-anrop till TMDB API
+import type { TMDBMovie, Genre } from "../types/movie.ts";
 
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
@@ -45,4 +46,41 @@ export async function searchMoviesTMDB(query: string, page: number = 1): Promise
     include_adult: "false",
   });
   return data.results ?? [];
+}
+
+
+
+export async function getGenres(): Promise<Genre[]> {
+  const response = await fetch(
+    `${TMDB_BASE_URL}/genre/movie/list?api_key=${TMDB_API_KEY}&language=en-US`
+  );
+
+  if (!response.ok) {
+    throw new Error(`Något blev fel: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.genres;
+}
+
+export async function getRecommendationsTMDB(movieId: number): Promise<TMDBMovie[]> {
+  const response = await fetch(`${TMDB_BASE_URL}/movie/${movieId}/recommendations?api_key=${TMDB_API_KEY}&language=en-US&page=1`);
+  if (!response.ok) {
+    throw new Error('Kunde inte hämta rekommendationer');
+  }
+  const data = await response.json();
+  return data.results;
+}
+
+//Här hämtar man filmer baserat på genre och keyword, detta ger fler alternativ att kombinera med rekommendationer
+export async function getSimilarMoviesTMDB(movieId: number): Promise<TMDBMovie[]> {
+  const response = await fetch(
+    `${TMDB_BASE_URL}/movie/${movieId}/similar?api_key=${TMDB_API_KEY}&language=en-US&page=1`
+  );
+
+  if (!response.ok) {
+    throw new Error('Kunde inte hämta liknande filmer');
+  }
+  const data = await response.json();
+  return data.results;
 }
