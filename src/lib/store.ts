@@ -192,7 +192,7 @@ class Store {
       //Steg 8: SKapa en snygg text som visar vilka filmer de var baserad på
       const basedOnTitles = topMovies.map(m => m.title).join(', ');
       this.recommendedBasedOn = basedOnTitles;
-      this.triggerRender();
+      // Removed triggerRender() - caller handles rendering after await
     } catch (error) {
       console.error("Kunde inte ladda rekommendationer", error);
       this.recommendations = [];

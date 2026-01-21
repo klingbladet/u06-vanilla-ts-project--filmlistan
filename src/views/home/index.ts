@@ -340,13 +340,13 @@ export default function home(): HTMLElement {
   // buildFullListForCurrentView(); // Moved into getGenres.then() and getMovies.then()
 
   // event listeners from dev
-  chips.addEventListener("click", (e) => {
+  chips.addEventListener("click", async(e) => {
     const btn = (e.target as HTMLElement).closest("button");
     if (!btn) return;
     const chip = btn.dataset.chip as typeof activeChip | undefined;
     if (!chip) return;
     activeChip = chip;
-    buildFullListForCurrentView();
+    await buildFullListForCurrentView();
     scrollToTop();
   });
 

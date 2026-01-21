@@ -2,7 +2,50 @@
 
 ## Overview
 
-This is a **two-tier architecture** app: the backend (Express API + SQLite) is fully functional with all CRUD operations ready. The frontend is ~75% complete - core browsing, watchlist, and watched lists are fully functional including moving/deleting movies.
+This is a **two-tier architecture** app: the backend (Express API + SQLite) is fully functional with all CRUD operations ready. The frontend is ~85% complete - core browsing, watchlist, watched lists, and **personalized recommendations** are fully functional.
+
+---
+
+## ⭐ NEW: Recommendation Algorithm (algo branch)
+
+### Weighted Recommendation System - ✅ **100% Complete**
+
+| Status | Feature | Location |
+|--------|---------|----------|
+| ✅ | Weight calculation algorithm | `src/lib/store.ts` |
+| ✅ | Multi-source recommendations | TMDB `/recommendations` + `/similar` |
+| ✅ | Score-based ranking | Films appearing from multiple sources rank higher |
+| ✅ | Filter out existing movies | Won't recommend movies user already has |
+| ✅ | Toggle UI (Popular/Recommended) | `src/views/home/index.ts` |
+
+### Weight Calculation Factors
+
+| Factor | Points |
+|--------|--------|
+| Base score | +1 |
+| Favorite (`is_favorite`) | +5 |
+| Personal rating (`personal_rating`) | +1 to +5 |
+| Status = "watched" | +2 |
+| Watched within 30 days | +3 |
+| Watched within 90 days | +1 |
+
+### Algorithm Flow
+1. Fetch user's saved movies from database
+2. Filter for watched movies (fallback to watchlist)
+3. Calculate weight for each movie
+4. Select top 3 highest-weighted movies
+5. Fetch recommendations + similar movies from TMDB for each
+6. Merge and score results (duplicates = higher score)
+7. Filter out movies user already has
+8. Return top 20 recommendations
+
+### New TypeScript Types
+- `WeightedMovie` - Movie with weight score
+- `ScoredRecommendation` - Recommendation with score and sources
+
+### New TMDB API Functions
+- `getSimilarMoviesTMDB(movieId)` - Fetch similar movies
+- `getPopularMoviesTMDB(page)` - Now supports pagination
 
 ---
 
@@ -38,17 +81,20 @@ This is a **two-tier architecture** app: the backend (Express API + SQLite) is f
 
 ---
 
-## 🔌 API Integration - ✅ **95% Complete**
+## 🔌 API Integration - ✅ **98% Complete**
 
 | Status | Feature | File | Notes |
 |--------|---------|------|-------|
 | ✅ | TMDB API config | `src/services/tmdbApi.ts` | Get popular, search |
+| ✅ | TMDB Get Recommendations | `src/services/tmdbApi.ts` | For algorithm |
+| ✅ | TMDB Get Similar Movies | `src/services/tmdbApi.ts` | **NEW** - For algorithm |
+| ✅ | TMDB Pagination Support | `src/services/tmdbApi.ts` | **NEW** - getPopularMoviesTMDB(page) |
 | ✅ | Backend GET movies | `src/services/movieApi.ts` | ✅ Working |
 | ✅ | Backend POST movie | `src/services/movieApi.ts` | ✅ Working |
 | ✅ | Backend PUT movie | `src/services/movieApi.ts` | ✅ Working |
 | ✅ | Backend DELETE movie | `src/services/movieApi.ts` | ✅ Working |
 | ❌ | Backend GET stats | Missing | **Need to add** |
-| ❌ | Error handling UI | Partial | Console only, no user feedback |
+| ⚠️ | Error handling UI | Partial | Console + try-catch, no toast notifications |
 
 ---
 
@@ -102,10 +148,13 @@ This is a **two-tier architecture** app: the backend (Express API + SQLite) is f
 | ❌ | **Edit rating/review** | **Not implemented** |
 | ✅ | **View watched date** | **Displayed in card** |
 
-### Advanced Features - ❌ **0% Complete**
+### Advanced Features - ⚠️ **40% Complete**
 
 | Status | Feature | Priority |
 |--------|---------|----------|
+| ✅ | **Personalized Recommendations** | **DONE** - Weighted algorithm |
+| ✅ | **Toggle Popular/Recommendations** | **DONE** - Chip UI |
+| ✅ | **Dynamic empty state messages** | **DONE** - Context-aware |
 | ❌ | **Mark as favorite** | Medium |
 | ❌ | **Filter by favorites** | Medium |
 | ❌ | **User statistics display** | Low |
@@ -162,11 +211,12 @@ This is a **two-tier architecture** app: the backend (Express API + SQLite) is f
 
 ```
 Backend:     ████████████████████ 100% ✅
-API Layer:   ███████████████████░  95% ✅
+API Layer:   ████████████████████  98% ✅
 Views:       ██████████████░░░░░░  70% ⚠️
-Features:    █████████████░░░░░░░  65% ⚠️
+Features:    ████████████████░░░░  80% ⚠️
+Algorithm:   ████████████████████ 100% ✅
 -------------------------------------------
-TOTAL:       ███████████████░░░░░  75% 🚧
+TOTAL:       █████████████████░░░  85% 🚧
 ```
 
 ---
@@ -218,6 +268,7 @@ headers: {
 
 ---
 
-**Last Updated**: January 10, 2026
-**Project Phase**: Development (75% complete)
+**Last Updated**: January 21, 2026
+**Project Phase**: Development (85% complete)
 **Next Milestone**: Movie Detail Page
+**Recent Addition**: Weighted Recommendation Algorithm (algo branch)
