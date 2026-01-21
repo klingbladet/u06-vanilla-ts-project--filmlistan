@@ -14,6 +14,9 @@ export default function home(): HTMLElement {
   container.className = "home-view p-4 max-w-7xl mx-auto";
 
   // Hero Image / Banner
+
+  //Image container
+  const imgContainer = document.
   const heroImage = document.createElement("img");
   heroImage.className = "mb-6 h-64 w-full rounded-2xl object-cover border border-white/10 bg-black/40 shadow-inner brightness-70";
   heroImage.src = "/img/banner/dune-2-banner-1.jpg"; 
@@ -49,6 +52,10 @@ export default function home(): HTMLElement {
   inner.className = "space-y-4";
   container.appendChild(inner);
 
+  const chipsAndControles = document.createElement("div");
+  chipsAndControles.className = "flex flex-wrap items-center justify-between gap-4";
+  inner.appendChild(chipsAndControles);
+
   // Top row med rubrik, chips och kontroller
   const topRow = document.createElement("div");
   topRow.className = "flex flex-wrap items-center justify-between gap-4";
@@ -63,17 +70,17 @@ export default function home(): HTMLElement {
   const chips = document.createElement("div");
   chips.className = "flex flex-wrap gap-2";
   chips.innerHTML = `
-    <button data-chip="popular" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold transition bg-red-500/75 text-black border-red-500/75 hover:bg-red-500/75">
+    <button data-chip="popular" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold bg-red transition  text-white/90 hover:bg-red-800">
       Populära
     </button>
-    <button data-chip="recommendations" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold transition bg-white/5 text-white/80">
+    <button data-chip="recommendations" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold transition bg-red text-white/90 hover:bg-red-800">
       ⭐ Rekommenderat
     </button>
-    <button data-chip="favorites" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold transition bg-white/5 text-white/80">
+    <button data-chip="favorites" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold transition bg-red text-white/90 hover:bg-red-800">
       ❤️ Favoriter
     </button>
   `;
-  topRow.appendChild(chips);
+  chipsAndControles.appendChild(chips);
 
   // Kontroller (per sida dropdown + page info) - from dev
   const controls = document.createElement("div");
@@ -100,7 +107,7 @@ export default function home(): HTMLElement {
 
     <div id="pageInfo" class="text-xs text-white/60"></div>
   `;
-  topRow.appendChild(controls);
+  chipsAndControles.appendChild(controls);
 
   const pageSizeSelect = controls.querySelector<HTMLSelectElement>("#pageSize")!;
   const sortSelect = controls.querySelector<HTMLSelectElement>("#sort")!;
@@ -126,7 +133,7 @@ export default function home(): HTMLElement {
   const filterContainerPlaceholder = document.createElement('div');
   filterContainerPlaceholder.className = "mt-6 text-center text-zinc-400"; // Lägg till lite stil
   filterContainerPlaceholder.textContent = 'Laddar filter...';
-  inner.appendChild(filterContainerPlaceholder); // Lägg till placeholder på sidan
+  topRow.appendChild(filterContainerPlaceholder); // Lägg till placeholder på sidan
 
   // Hämta genrerna och, när de är klara, skapa och visa filter-komponenten
   let allGenres: Genre[] = []; // This was already declared in dev but not initialized. Now it is.
@@ -158,7 +165,7 @@ export default function home(): HTMLElement {
     <button id="prevBtn" class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition hover:bg-white/10">
       ← Prev
     </button>
-    <button id="nextBtn" class="rounded-xl bg-red-500/75 px-4 py-2 text-xs font-semibold text-black transition hover:bg-red-500">
+    <button id="nextBtn" class="rounded-xl bg-red px-4 py-2 text-xs font-semibold text-black transition hover:bg-red-800">
       Next →
     </button>
   `;
@@ -181,7 +188,7 @@ export default function home(): HTMLElement {
 
   const setHeading = (text: string) => {
     heading.innerHTML = `
-      <span class="h-6 w-1 rounded bg-red-500/75"></span>
+      <span class="h-6 w-1 rounded bg-red"></span>
       <span>${text}</span>
     `;
   };
@@ -306,11 +313,11 @@ export default function home(): HTMLElement {
     chips.querySelectorAll<HTMLButtonElement>("button").forEach((b) => {
       const isActive = b.dataset.chip === activeChip;
       if (isActive) {
-        b.classList.add("bg-red-500/75", "text-black", "border-red-500/75", "hover:bg-red-500");
-        b.classList.remove("bg-white/5", "text-white/80");
+        b.classList.add("bg-red", "text-black", "border-red");
+        b.classList.remove("bg-white/5", "text-white/90", "hover:bg-red-800");
       } else {
-        b.classList.remove("bg-red-500/75", "text-black", "border-red-500/75", "hover:bg-red-500");
-        b.classList.add("bg-white/5", "text-white/80");
+        b.classList.remove("bg-red", "text-black", "border-red");
+        b.classList.add("bg-white/5", "text-white/90", "hover:bg-red-800");
       }
     });
   };
@@ -539,7 +546,7 @@ export default function home(): HTMLElement {
     <div class="relative aspect-[2/3] bg-zinc-800">
       <img src="${imageUrl}" alt="${movie.title}" loading="lazy"
         class="h-full w-full object-cover opacity-0 transition duration-500 group-hover:scale-[1.03]" />
-      <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
+      <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent transition duration-500 group-hover:scale-[1.03]"></div>
 
       <div class="absolute left-3 top-3 flex items-center gap-2">
         <span class="inline-flex items-center gap-1 rounded-full bg-black/60 px-2 py-1 text-[11px] text-white/80 ring-1 ring-white/10">
@@ -574,7 +581,7 @@ export default function home(): HTMLElement {
             data-action="watched"
             ${watchedDisabled ? "disabled" : ""}
             class="flex-1 rounded-lg px-2 py-2 text-[11px] font-semibold transition
-              ${watchedDisabled ? "bg-white/10 text-white/50 cursor-not-allowed" : "bg-red-500/75 text-black hover:bg-red-500"}">
+              ${watchedDisabled ? "bg-white/10 text-white/50 cursor-not-allowed" : "bg-red text-black hover:bg-red-800"}">
               ${watchedLabel}
           </button>
         </div>
@@ -638,7 +645,7 @@ export default function home(): HTMLElement {
         } else { // watched
           btn.textContent = "Watched";
           btn.classList.add("bg-white/10", "text-white/50", "cursor-not-allowed");
-          btn.classList.remove("bg-red-500/75", "text-black", "hover:bg-red-500");
+          btn.classList.remove("bg-red", "text-black", "hover:bg-red-800");
 
           watchlistBtn.disabled = true;
           watchlistBtn.classList.add("bg-white/10", "text-white/50", "cursor-not-allowed");

@@ -16,7 +16,7 @@ export default function watched(): HTMLElement {
 
   const titleGroup = document.createElement("div");
   titleGroup.innerHTML = `
-    <div class="inline-flex items-center rounded-lg bg-amber-400 px-3 py-1 text-xs font-extrabold tracking-wide text-black mb-2">
+    <div class="inline-flex items-center rounded-lg bg-red px-3 py-1 text-xs font-extrabold tracking-wide text-black mb-2">
       HISTORY
     </div>
     <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">Sedda filmer</h1>

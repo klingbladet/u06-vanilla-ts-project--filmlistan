@@ -22,7 +22,7 @@ export default function createMovieModal(movie: TMDBMovie, dbMovie?: DatabaseMov
           <h3 class="text-2xl font-extrabold text-white leading-tight drop-shadow-md">${movie.title}</h3>
           <div class="flex items-center gap-3 mt-2 text-sm text-zinc-300">
              <span>${movie.release_date?.split('-')[0] || 'Unknown'}</span>
-             <span class="flex items-center gap-1 text-amber-400 font-bold">⭐ ${movie.vote_average.toFixed(1)}</span>
+             <span class="flex items-center gap-1 text-white font-bold">⭐ ${movie.vote_average.toFixed(1)}</span>
           </div>
         </div>
       </div>
@@ -49,7 +49,7 @@ export default function createMovieModal(movie: TMDBMovie, dbMovie?: DatabaseMov
         <button id="watchlist-button" class="flex-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 py-3 text-sm font-bold hover:bg-emerald-500 hover:text-black transition">
           + Watchlist
         </button>
-        <button id="watched-button" class="flex-1 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500/75 py-3 text-sm font-bold hover:bg-red-500 hover:text-black transition ease-in-out">
+        <button id="watched-button" class="flex-1 rounded-xl bg-red/10 border border-red/20 text-red py-3 text-sm font-bold hover:bg-red hover:text-black transition ease-in-out">
           ✓ Markera som sedd
         </button>
       </div>

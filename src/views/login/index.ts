@@ -28,7 +28,7 @@ export default function loginView(): HTMLElement {
             id="email"
             type="email"
             placeholder="demo@filmkollen.se"
-            class="rounded-xl border border-white/10 bg-zinc-900 px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-amber-400/40"
+            class="rounded-xl border border-white/10 bg-zinc-900 px-4 py-3 text-sm text-white outline-none focus:ring-1 focus:ring-red-800/40"
           />
         </label>
 
@@ -38,13 +38,13 @@ export default function loginView(): HTMLElement {
             id="password"
             type="password"
             placeholder="film123"
-            class="rounded-xl border border-white/10 bg-zinc-900 px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-amber-400/40"
+            class="rounded-xl border border-white/10 bg-zinc-900 px-4 py-3 text-sm text-white outline-none focus:ring-1 focus:ring-red-800/40"
           />
         </label>
 
         <button
           type="submit"
-          class="mt-2 rounded-xl bg-amber-400 px-4 py-3 text-sm font-semibold text-black transition hover:bg-amber-300"
+          class="mt-2 rounded-xl bg-red px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-800"
         >
           Logga in
         </button>

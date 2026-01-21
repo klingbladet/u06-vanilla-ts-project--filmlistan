@@ -64,35 +64,8 @@ export function createFilterComponent(genres: Genre[]): HTMLElement {
   genreWrapper.appendChild(genreLabel);
   genreWrapper.appendChild(genreSelect);
 
-  // ===== BETYGSFILTER ===== skapandet av checkbox/filtrering av betyg över 7 under
-
-  const ratingWrapper = document.createElement('div');
-  ratingWrapper.className = 'flex items-center gap-2';
-
-  const ratingCheckbox = document.createElement('input');
-  ratingCheckbox.type = 'checkbox';
-  ratingCheckbox.id = 'ratingFilter';
-  ratingCheckbox.className =
-  'h-4 w-4 accent-blue-600 cursor-pointer';
-
-
-
-  ratingCheckbox.addEventListener('change', () => {
-    store.activeFilters.rating.over7 = ratingCheckbox.checked;
-    document.dispatchEvent(new CustomEvent('filterchange'));
-  });
-
-  const ratingLabel = document.createElement('label');
-  ratingLabel.htmlFor = 'ratingFilter';
-  ratingLabel.textContent = 'Betyg ≥ 7';
-  
-
-  ratingWrapper.appendChild(ratingCheckbox);
-  ratingWrapper.appendChild(ratingLabel);
-
   // ===== LÄGG ALLT I CONTAINER =====
   filterContainer.appendChild(genreWrapper);
-  filterContainer.appendChild(ratingWrapper);
 
   return filterContainer;
 }
