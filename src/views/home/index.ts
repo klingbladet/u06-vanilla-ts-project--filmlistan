@@ -69,6 +69,9 @@ export default function home(): HTMLElement {
     <button data-chip="recommendations" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold transition bg-white/5 text-white/80">
       ⭐ Rekommenderat
     </button>
+    <button data-chip="favorites" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold transition bg-white/5 text-white/80">
+      ❤️ Favoriter
+    </button>
   `;
   topRow.appendChild(chips);
 
@@ -344,17 +347,9 @@ export default function home(): HTMLElement {
 
     if (activeChip === "favorites") {
       setHeading("Mina favoriter");
-      fullList = getFavorites();
       isLoading = false;
-      try {
-        if (store.popularMovies.length === 0) await loadPopularMovies(false);
-
-        await ensurePopularCount(perPage); // Ensure enough popular movies
-        baseList = store.popularMovies;
-      } catch (error) {
-        console.error("Kunde inte ladda populära filmer:", error);
-        baseList = [];
-      }
+      baseList = getFavorites();
+      
       setChipActiveStyles();
       fullList = applyFilters(baseList); // Apply filters here
       render();
@@ -493,7 +488,7 @@ export default function home(): HTMLElement {
 
     const existingDbMovie = findDbMovieByTmdbId(tmdbMovie.id);
     if (existingDbMovie?.status === "watched") {
-      showToast("Redan Watched ✅");
+      showToast("Redan Watched");
       return;
     }
 
@@ -535,7 +530,7 @@ export default function home(): HTMLElement {
     const watchlistDisabled = isSaved;
     const watchedDisabled = isWatched;
 
-    const watchedLabel = isWatchlist ? "Mark as watched" : isWatched ? "watched ✅" : "✓ Watched";
+    const watchedLabel = isWatchlist ? "Mark as watched" : isWatched ? "watched" : "✓ Watched";
 
     const rating = Number.isFinite(movie.vote_average) ? movie.vote_average.toFixed(1) : "0.0";
     const release = movie.release_date ?? "";
@@ -552,56 +547,52 @@ export default function home(): HTMLElement {
           ${rating}
         </span>
       </div>
+    </div>
 
-      <div class="absolute inset-x-0 bottom-0 p-3 opacity-0 translate-y-2 transition group-hover:opacity-100 group-hover:translate-y-0">
-        <div class="grid gap-2 rounded-xl border border-white/10 bg-black/40 p-2 backdrop-blur">
-          <div class="flex gap-2">
-            <button
-              data-id="${movie.id}"
-              data-action="watchlist"
-              ${watchlistDisabled ? "disabled" : ""}
-              class="flex-1 rounded-lg px-2 py-2 text-[11px] font-semibold transition
-                ${watchlistDisabled ? "bg-white/10 text-white/50 cursor-not-allowed" : "bg-emerald-400 text-black hover:bg-emerald-300"}">
-              <span class="inline-flex items-center justify-center gap-2">
-                ${Icons.bookmark({ className: "h-4 w-4" })}
-                Watchlist
-              </span>
-            </button>
+    <div class="p-3 space-y-3">
+      <div>
+        <h3 class="text-sm font-semibold text-white line-clamp-2">${movie.title}</h3>
+        <p class="mt-1 text-xs text-white/55">${release}</p>
+      </div>
 
-            <button
-              data-id="${movie.id}"
-              data-action="watched"
-              ${watchedDisabled ? "disabled" : ""}
-              class="flex-1 rounded-lg px-2 py-2 text-[11px] font-semibold transition
-                ${watchedDisabled ? "bg-white/10 text-white/50 cursor-not-allowed" : "bg-amber-400 text-black hover:bg-amber-300"}">
-                ${watchedLabel}
-              <span class="inline-flex items-center justify-center gap-2">
-                ${Icons.check({ className: "h-4 w-4" })}
-                Watched
-              </span>
-            </button>
-          </div>
+      <div class="grid gap-2">
+        <div class="flex gap-2">
+          <button
+            data-id="${movie.id}"
+            data-action="watchlist"
+            ${watchlistDisabled ? "disabled" : ""}
+            class="flex-1 rounded-lg px-2 py-2 text-[11px] font-semibold transition
+              ${watchlistDisabled ? "bg-white/10 text-white/50 cursor-not-allowed" : "bg-emerald-400 text-black hover:bg-emerald-300"}">
+            <span class="inline-flex items-center justify-center gap-2">
+              ${Icons.bookmark({ className: "h-4 w-4" })}
+              Watchlist
+            </span>
+          </button>
 
           <button
             data-id="${movie.id}"
-            data-action="favorite"
-            class="rounded-lg border border-white/10 bg-white/5 px-2 py-2 text-[11px] font-semibold text-white/80 hover:bg-white/10">
-            <span class="inline-flex items-center justify-center gap-2">
-              ${
-                fav
-                  ? Icons.heartSolid({ className: "h-4 w-4 text-rose-500" })
-                  : Icons.heart({ className: "h-4 w-4 text-rose-400" })
-              }
-              ${fav ? "Ta bort favorit" : "Lägg i favoriter"}
-            </span>
+            data-action="watched"
+            ${watchedDisabled ? "disabled" : ""}
+            class="flex-1 rounded-lg px-2 py-2 text-[11px] font-semibold transition
+              ${watchedDisabled ? "bg-white/10 text-white/50 cursor-not-allowed" : "bg-amber-400 text-black hover:bg-amber-300"}">
+              ${watchedLabel}
           </button>
         </div>
-      </div>
-    </div>
 
-    <div class="p-3">
-      <h3 class="text-sm font-semibold text-white line-clamp-2">${movie.title}</h3>
-      <p class="mt-1 text-xs text-white/55">${release}</p>
+        <button
+          data-id="${movie.id}"
+          data-action="favorite"
+          class="rounded-lg border border-white/10 bg-white/5 px-2 py-2 text-[11px] font-semibold text-white/80 hover:bg-white/10">
+          <span class="inline-flex items-center justify-center gap-2">
+            ${
+              fav
+                ? Icons.heartSolid({ className: "h-4 w-4 text-rose-500" })
+                : Icons.heart({ className: "h-4 w-4 text-rose-400" })
+            }
+            ${fav ? "Ta bort favorit" : "Lägg i favoriter"}
+          </span>
+        </button>
+      </div>
     </div>
   `;
 
@@ -635,7 +626,7 @@ export default function home(): HTMLElement {
         if (idx >= 0) savedMovies[idx] = updated;
         else savedMovies.push(updated);
 
-        showToast(action === "watchlist" ? "Sparad i Watchlist ✔" : "Markerad som Watched ✅");
+        showToast(action === "watchlist" ? "Sparad i Watchlist ✔" : "Markerad som Watched ✔");
 
         // Update UI locally without full re-render
         if (action === "watchlist") {
@@ -645,7 +636,7 @@ export default function home(): HTMLElement {
           // Update local scope
           dbMovie = updated;
         } else { // watched
-          btn.textContent = "Watched ✅";
+          btn.textContent = "Watched";
           btn.classList.add("bg-white/10", "text-white/50", "cursor-not-allowed");
           btn.classList.remove("bg-amber-400", "text-black", "hover:bg-amber-300");
 
