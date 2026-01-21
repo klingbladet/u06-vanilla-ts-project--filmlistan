@@ -10,6 +10,34 @@ export default function home(): HTMLElement {
   const container = document.createElement("div");
   container.className = "home-view p-4 max-w-7xl mx-auto";
 
+  // Hero Image / Banner
+  const heroImage = document.createElement("img");
+  heroImage.className = "mb-6 h-64 w-full rounded-2xl object-cover border border-white/10 bg-black/40 shadow-inner brightness-70";
+  heroImage.src = "/img/banner/dune-2-banner-1.jpg"; 
+  heroImage.alt = "Blade Runner Hero Banner";
+
+  const heroImages = [
+    { src: "/img/banner/bladerunner-banner.jpg", alt: "Blade Runner Hero"},
+    { src: "/img/banner/dune-2-banner-1.jpg", alt: "Dune 2 Banner 1"},
+    { src: "/img/banner/dune-2-banner-2.jpg", alt: "Dune 2 Banner 2"},
+    { src: "/img/banner/killers-of-the-flower-moon-banner.jpg", alt: "Killers of the flower Moon Banner"},
+  ];
+
+  const updateHeroImage= (imgElement: HTMLImageElement) => {
+    const currentHour = new Date().getSeconds();
+    const imageIndex = currentHour % heroImages.length;
+    const selectedImage = heroImages[imageIndex]
+
+    imgElement.src = selectedImage.src;
+    imgElement.alt = selectedImage.alt;
+  };
+
+  updateHeroImage(heroImage)
+
+  setInterval(() => updateHeroImage(heroImage), 100000);
+
+  container.appendChild(heroImage);
+
   // Lägg till sökfältet högst upp
   container.appendChild(SearchComponent());
 
