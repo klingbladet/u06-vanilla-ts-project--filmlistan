@@ -10,6 +10,34 @@ export default function home(): HTMLElement {
   const container = document.createElement("div");
   container.className = "home-view p-4 max-w-7xl mx-auto";
 
+  // Hero Image / Banner
+  const heroImage = document.createElement("img");
+  heroImage.className = "mb-6 h-64 w-full rounded-2xl object-cover border border-white/10 bg-black/40 shadow-inner brightness-70";
+  heroImage.src = "/img/banner/dune-2-banner-1.jpg"; 
+  heroImage.alt = "Blade Runner Hero Banner";
+
+  const heroImages = [
+    { src: "/img/banner/bladerunner-banner.jpg", alt: "Blade Runner Hero"},
+    { src: "/img/banner/dune-2-banner-1.jpg", alt: "Dune 2 Banner 1"},
+    { src: "/img/banner/dune-2-banner-2.jpg", alt: "Dune 2 Banner 2"},
+    { src: "/img/banner/killers-of-the-flower-moon-banner.jpg", alt: "Killers of the flower Moon Banner"},
+  ];
+
+  const updateHeroImage= (imgElement: HTMLImageElement) => {
+    const currentHour = new Date().getSeconds();
+    const imageIndex = currentHour % heroImages.length;
+    const selectedImage = heroImages[imageIndex]
+
+    imgElement.src = selectedImage.src;
+    imgElement.alt = selectedImage.alt;
+  };
+
+  updateHeroImage(heroImage)
+
+  setInterval(() => updateHeroImage(heroImage), 100000);
+
+  container.appendChild(heroImage);
+
   // Lägg till sökfältet högst upp
   container.appendChild(SearchComponent());
 
@@ -28,7 +56,7 @@ export default function home(): HTMLElement {
   heading.className = "flex items-center gap-3 text-xl font-bold text-white";
   topRow.appendChild(heading);
 
-  // Chips för att filtrera (Popular, Rekommenderat, Watchlist, Watched) - from dev
+  // Chips för att filtrera (Popular, Rekommenderat) - from dev
   const chips = document.createElement("div");
   chips.className = "flex flex-wrap gap-2";
   chips.innerHTML = `
@@ -37,12 +65,6 @@ export default function home(): HTMLElement {
     </button>
     <button data-chip="recommendations" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold transition bg-white/5 text-white/80">
       ⭐ Rekommenderat
-    </button>
-    <button data-chip="watchlist" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold transition bg-white/5 text-white/80">
-      Watchlist
-    </button>
-    <button data-chip="watched" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold transition bg-white/5 text-white/80">
-      Watched
     </button>
   `;
   topRow.appendChild(chips);
@@ -112,7 +134,7 @@ export default function home(): HTMLElement {
   const prevBtn = pager.querySelector<HTMLButtonElement>("#prevBtn")!;
   const nextBtn = pager.querySelector<HTMLButtonElement>("#nextBtn")!;
 
-  let activeChip: "popular" | "recommendations" | "watchlist" | "watched" = "popular";
+  let activeChip: "popular" | "recommendations" = "popular";
   let perPage = Number(pageSizeSelect.value);
   let page = 1;
 
@@ -183,10 +205,6 @@ export default function home(): HTMLElement {
 
       if (activeChip === "recommendations") {
         emptyMessage = "Inga rekommendationer ännu. Lägg till filmer i din Watchlist eller markera filmer som Watched för att få personliga rekommendationer!";
-      } else if (activeChip === "watchlist") {
-        emptyMessage = "Din watchlist är tom. Lägg till filmer från Populära!";
-      } else if (activeChip === "watched") {
-        emptyMessage = "Du har inte markerat några filmer som sedda ännu.";
       } else if (store.isSearching && store.searchResults.length === 0) {
         emptyMessage = `Inga resultat för "${store.currentSearchQuery}".`;
       } else if (store.activeFilters.genres.length > 0 || store.activeFilters.rating.over7) {
@@ -276,42 +294,6 @@ export default function home(): HTMLElement {
         baseList = [];
       }
 
-      setChipActiveStyles();
-      fullList = applyFilters(baseList); // Apply filters here
-      render();
-      return;
-    }
-
-    if (activeChip === "watchlist") {
-      setHeading("Min Watchlist");
-      const list = savedMovies.filter((m) => m.status === "watchlist");
-      baseList = list.map((m) => ({
-        id: m.tmdb_id,
-        title: m.title,
-        poster_path: m.poster_path ?? "",
-        release_date: m.release_date ?? "",
-        vote_average: m.vote_average ?? 0,
-        overview: m.overview ?? "",
-        genre_ids: [], // Assuming watchlist movies might not have genre_ids directly.
-      })) as TMDBMovie[]; // Cast to TMDBMovie[]
-      setChipActiveStyles();
-      fullList = applyFilters(baseList); // Apply filters here
-      render();
-      return;
-    }
-
-    if (activeChip === "watched") {
-      setHeading("Watched");
-      const list = savedMovies.filter((m) => m.status === "watched");
-      baseList = list.map((m) => ({
-        id: m.tmdb_id,
-        title: m.title,
-        poster_path: m.poster_path ?? "",
-        release_date: m.release_date ?? "",
-        vote_average: m.vote_average ?? 0,
-        overview: m.overview ?? "",
-        genre_ids: [], // Assuming watched movies might not have genre_ids directly.
-      })) as TMDBMovie[]; // Cast to TMDBMovie[]
       setChipActiveStyles();
       fullList = applyFilters(baseList); // Apply filters here
       render();
@@ -493,10 +475,6 @@ export default function home(): HTMLElement {
         btn.disabled = false;
         btn.textContent = originalText;
         showToast("Något gick fel", false);
-      } finally {
-        // After an action, the lists might change (e.g., movie moved from watchlist to watched).
-        // Rebuild the current view to reflect changes and apply filters again.
-        buildFullListForCurrentView();
       }
     };
 
