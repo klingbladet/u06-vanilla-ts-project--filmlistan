@@ -2,12 +2,10 @@ import { getMovies, deleteMovie, updateMovie } from "../../services/movieApi";
 import createMovieModal from "../../components/Modal";
 import type { DatabaseMovie } from "../../types/movie";
 import { ratingComponent } from "../../components/review-rating";
-import { isFavorite, toggleFavorite, syncFavoriteToDatabase } from "../../lib/favorites";
-import { Icons } from "../../components/icons";
 
 export default function watched(): HTMLElement {
   const container = document.createElement("div");
-  container.className = "min-h-screen bg-zinc-950 text-white";
+  container.className = "min-h-screen bg-zinc-900/90 text-white/80";
 
   const inner = document.createElement("div");
   inner.className = "max-w-7xl mx-auto px-4 py-6";
@@ -18,15 +16,15 @@ export default function watched(): HTMLElement {
 
   const titleGroup = document.createElement("div");
   titleGroup.innerHTML = `
-    <div class="inline-flex items-center rounded-lg bg-amber-400 px-3 py-1 text-xs font-extrabold tracking-wide text-black mb-2">
+    <div class="inline-flex items-center rounded-lg bg-red-500/75 px-3 py-1 text-xs font-bold tracking-wide text-zinc-800 mb-2">
       HISTORY
     </div>
-    <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">Sedda filmer</h1>
-    <p class="text-zinc-400 mt-1 text-sm">Din historik och dina recensioner.</p>
+    <h1 class="text-3xl md:text-4xl font-semibold tracking-tight">Sedda filmer</h1>
+    <p class="text-zinc-500 mt-1 text-sm">Din historik och dina recensioner.</p>
   `;
   
   const clearBtn = document.createElement("button");
-  clearBtn.className = "rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-xs font-bold text-rose-400 transition hover:bg-rose-500/10 hover:text-rose-300 disabled:opacity-50 disabled:cursor-not-allowed";
+  clearBtn.className = "flex items-center content-center rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-xs font-semibold text-rose-500/60 transition hover:bg-rose-600/15 hover:text-rose-500/60 disabled:opacity-50 disabled:cursor-not-allowed";
   clearBtn.textContent = "Rensa hela listan";
 
   header.appendChild(titleGroup);
@@ -46,8 +44,8 @@ export default function watched(): HTMLElement {
     grid.innerHTML = `
       <div class="col-span-full flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5 p-12 text-center">
         <div class="text-4xl mb-4">🎬</div>
-        <h3 class="text-lg font-bold text-white">Inga sedda filmer än</h3>
-        <p class="text-zinc-400 text-sm mt-2">När du markerar filmer som "Watched" hamnar de här.</p>
+        <h3 class="text-lg font-semibold text-white/80">Inga sedda filmer än</h3>
+        <p class="text-zinc-500 text-sm mt-2">När du markerar filmer som "Watched" hamnar de här.</p>
       </div>
     `;
   }
@@ -97,7 +95,7 @@ export default function watched(): HTMLElement {
 
 function createWatchedCard(movie: DatabaseMovie, onRemove: () => void): HTMLElement {
   const card = document.createElement("article");
-  card.className = "group relative overflow-hidden rounded-2xl bg-zinc-900/60 ring-1 ring-white/10 transition hover:ring-white/20 flex flex-col";
+  card.className = "group relative overflow-hidden rounded-2xl bg-zinc-900 ring-1 ring-white/10 transition hover:ring-white/20 flex flex-col";
 
   const imageUrl = movie.poster_path
     ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
@@ -109,26 +107,22 @@ function createWatchedCard(movie: DatabaseMovie, onRemove: () => void): HTMLElem
     <div class="poster-container relative aspect-[2/3] w-full bg-zinc-800 shrink-0 cursor-pointer overflow-hidden">
       <img src="${imageUrl}" alt="${movie.title}" loading="lazy"
         class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
+      
+      <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/30 to-transparent transition duration-500 group-hover:scale-[1.03]"></div>
 
-      <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent"></div>
-
-      <button class="btn-delete absolute right-3 top-3 z-30 rounded-full bg-black/60 p-2 text-white/70 ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-rose-500 hover:text-white hover:scale-110">
+      <button class="btn-delete absolute right-3 top-3 z-30 rounded-full bg-black/60 p-2 text-white/70 ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-rose-600/50 hover:text-white hover:scale-110">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
       </button>
     </div>
 
     <div class="p-4 flex flex-col gap-4 flex-1">
       <div>
-        <h3 class="text-lg font-bold text-white line-clamp-1">${movie.title}</h3>
+        <h3 class="text-lg font-semibold text-white/80 line-clamp-1">${movie.title}</h3>
         <p class="text-xs text-zinc-500">Sedd: ${dateWatched}</p>
       </div>
 
       <div class="rating-slot flex justify-center py-2 bg-white/5 rounded-lg"></div>
       <div class="review-slot"></div>
-
-      <button class="btn-favorite rounded-lg border border-white/10 bg-white/5 px-2 py-2 text-[11px] font-semibold text-white/80 hover:bg-white/10 transition">
-        <span class="inline-flex items-center justify-center gap-2"></span>
-      </button>
     </div>
   `;
 
@@ -152,10 +146,10 @@ function createWatchedCard(movie: DatabaseMovie, onRemove: () => void): HTMLElem
   deleteBtn.addEventListener("click", async (e) => {
     e.stopPropagation();
     if(!confirm("Ta bort från historiken?")) return;
-
+    
     card.style.opacity = "0.5";
     card.style.pointerEvents = "none";
-
+    
     try {
       await deleteMovie(movie.id);
       card.remove();
@@ -168,48 +162,6 @@ function createWatchedCard(movie: DatabaseMovie, onRemove: () => void): HTMLElem
     }
   });
 
-  // --- Favorite Button Logic ---
-  const favoriteBtn = card.querySelector(".btn-favorite") as HTMLButtonElement;
-
-  const updateFavoriteButtonUI = () => {
-    const fav = isFavorite(movie.tmdb_id);
-    const iconSpan = favoriteBtn.querySelector("span");
-    if (iconSpan) {
-      iconSpan.innerHTML = `
-        ${fav
-          ? Icons.heartSolid({ className: "h-4 w-4 text-rose-500" })
-          : Icons.heart({ className: "h-4 w-4 text-rose-400" })
-        }
-        ${fav ? "Ta bort favorit" : "Lägg i favoriter"}
-      `;
-    }
-  };
-
-  // Set initial state
-  updateFavoriteButtonUI();
-
-  favoriteBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-
-    // Create TMDBMovie-like object for toggleFavorite
-    const tmdbMovie = {
-      id: movie.tmdb_id,
-      title: movie.title,
-      overview: movie.overview || "",
-      poster_path: movie.poster_path || "",
-      release_date: movie.release_date || "",
-      vote_average: movie.vote_average || 0,
-      genre_ids: [] as number[],
-    };
-
-    toggleFavorite(tmdbMovie);
-    updateFavoriteButtonUI();
-
-    // Sync to database so the recommendation algorithm gets the +5 weight bonus
-    const nowFav = isFavorite(movie.tmdb_id);
-    syncFavoriteToDatabase(movie, nowFav);
-  });
-  // --- End Favorite Button Logic ---
 
   card.addEventListener("click", () => {
     // Convert DatabaseMovie to TMDBMovie structure for the modal

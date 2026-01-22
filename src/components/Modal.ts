@@ -11,7 +11,7 @@ export default function createMovieModal(movie: TMDBMovie, dbMovie?: DatabaseMov
   modal.innerHTML = `
     <div id="modal-content" class="bg-zinc-900 border border-white/10 p-0 rounded-2xl shadow-2xl max-w-md w-full relative overflow-hidden flex flex-col max-h-[90vh]">
       
-      <button id="modal-close-btn" class="absolute top-4 right-4 z-10 p-2 bg-black/50 rounded-full text-white/80 hover:text-white hover:bg-rose-500 transition cursor-pointer">
+      <button id="modal-close-btn" class="absolute top-4 right-4 z-10 p-2 bg-black/50 rounded-full text-white/80 hover:text-white/80 hover:bg-rose-600/70 transition duration-150 cursor-pointer">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
 
@@ -19,10 +19,10 @@ export default function createMovieModal(movie: TMDBMovie, dbMovie?: DatabaseMov
         <img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" alt="${movie.title}" class="w-full h-full object-cover">
         <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent"></div>
         <div class="absolute bottom-4 left-6 right-6">
-          <h3 class="text-2xl font-extrabold text-white leading-tight drop-shadow-md">${movie.title}</h3>
+          <h3 class="text-2xl font-bold text-white/80 leading-tight drop-shadow-md">${movie.title}</h3>
           <div class="flex items-center gap-3 mt-2 text-sm text-zinc-300">
              <span>${movie.release_date?.split('-')[0] || 'Unknown'}</span>
-             <span class="flex items-center gap-1 text-amber-400 font-bold">⭐ ${movie.vote_average.toFixed(1)}</span>
+             <span class="flex items-center gap-1 text-/80 font-semibold">⭐ ${movie.vote_average.toFixed(1)}</span>
           </div>
         </div>
       </div>
@@ -35,7 +35,7 @@ export default function createMovieModal(movie: TMDBMovie, dbMovie?: DatabaseMov
         <div class="space-y-6 border-t border-white/10 pt-6">
            <div>
              <h4 class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">Ditt betyg</h4>
-             <div class="rating-slot flex justify-center p-4 bg-white/5 rounded-xl"></div>
+             <div class="rating-slot flex justify-center p-4 bg-zinc-800/40 rounded-xl"></div>
            </div>
 
            <div>
@@ -46,10 +46,10 @@ export default function createMovieModal(movie: TMDBMovie, dbMovie?: DatabaseMov
       </div>
 
       <div class="p-4 bg-black/20 border-t border-white/5 flex gap-3">
-        <button id="watchlist-button" class="flex-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 py-3 text-sm font-bold hover:bg-emerald-500 hover:text-black transition">
+        <button id="watchlist-button" class="flex-1 rounded-xl bg-emerald-400/10 border border-emerald-400/20 text-emerald-400/90 py-3 text-sm font-bold hover:bg-emerald-400/90 hover:text-zinc-800 transition duration-150 ease-in-out">
           + Watchlist
         </button>
-        <button id="watched-button" class="flex-1 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500/75 py-3 text-sm font-bold hover:bg-red-500 hover:text-black transition ease-in-out">
+        <button id="watched-button" class="flex-1 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500/75 py-3 text-sm font-bold hover:bg-red-500/75 hover:text-zinc-800 transition duration-150 ease-in-out">
           ✓ Markera som sedd
         </button>
       </div>
