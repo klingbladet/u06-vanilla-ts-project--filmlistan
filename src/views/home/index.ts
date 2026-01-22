@@ -4,7 +4,7 @@ import { SearchComponent } from "../../components/search";
 import createMovieModal from "../../components/Modal";
 import { getMovies, upsertMovieStatusByTmdbId } from "../../services/movieApi";
 import { isLoggedIn } from "../../lib/auth";
-import { getFavorites, isFavorite, toggleFavorite } from "../../lib/favorites";
+import { getFavorites, isFavorite, toggleFavorite, syncFavoriteToDatabase } from "../../lib/favorites";
 import { Icons } from "../../components/icons";
 import { getGenres } from '../../services/tmdbApi'; // Keep getGenres
 import { createFilterComponent } from '../../components/filter'; // Keep createFilterComponent
@@ -463,21 +463,6 @@ export default function home(): HTMLElement {
     const tmdbMovie = fullList.find((m) => m.id === movieId);
     if (!tmdbMovie) return;
 
-    // Favorite
-    if (action === "favorite") {
-      if (!isLoggedIn()) {
-        showToast("Du måste logga in först.", false);
-        window.history.pushState({}, "", "/login");
-        window.dispatchEvent(new PopStateEvent("popstate"));
-        return;
-      }
-      toggleFavorite(tmdbMovie);
-      heartBurstAt(btn);
-      showToast("Favorit uppdaterad");
-      render();
-      return;
-    }
-
     // Watchlist / watched
     if (!isLoggedIn()) {
       showToast("Du måste logga in först.", false);
@@ -602,6 +587,69 @@ export default function home(): HTMLElement {
     // --- NEW LOCAL LOGIC START ---
     const watchlistBtn = card.querySelector('button[data-action="watchlist"]') as HTMLButtonElement;
     const watchedBtn = card.querySelector('button[data-action="watched"]') as HTMLButtonElement;
+    const favoriteBtn = card.querySelector('button[data-action="favorite"]') as HTMLButtonElement;
+
+    favoriteBtn.addEventListener("click", (e) => {
+      e.stopPropagation(); //Prevents bubbling to container
+
+      if (!isLoggedIn()) {
+        showToast("Du måste logga in först.", false);
+        window.history.pushState({}, "", "/login");
+        window.dispatchEvent(new PopStateEvent("popstate"));
+        return;
+      }
+
+      toggleFavorite(movie);
+      heartBurstAt(favoriteBtn);
+
+      const nowFav = isFavorite(movie.id);
+
+      // Sync to database so the recommendation algorithm gets the +5 weight bonus
+      // Pass the movie so it can be created in DB if it doesn't exist yet
+      syncFavoriteToDatabase(dbMovie, nowFav, movie).then((newDbMovie) => {
+        // If a new movie was created, add it to savedMovies
+        if (newDbMovie) {
+          savedMovies.push(newDbMovie);
+          dbMovie = newDbMovie; // Update local reference
+        }
+      });
+
+      // If we're on the favorites tab and just UN-favorited, remove the card
+      if (activeChip === "favorites" && !nowFav) {
+        card.style.transition = "opacity 0.3s, transform 0.3s";
+        card.style.opacity = "0";
+        card.style.transform = "scale(0.9)";
+        setTimeout(() => {
+          card.remove();
+          // Update fullList to reflect the removal
+          fullList = fullList.filter((m) => m.id !== movie.id);
+          updatePagerUI();
+          // Show empty message if no favorites left
+          if (fullList.length === 0) {
+            grid.innerHTML = `
+              <div class="col-span-full rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-sm text-white/70">
+                Inga favoriter än. Lägg till filmer genom att klicka på hjärtat!
+              </div>`;
+          }
+        }, 300);
+        showToast("Borttagen från favoriter");
+        return;
+      }
+
+      showToast(nowFav ? "Tillagd i favoriter ❤️" : "Borttagen från favoriter");
+
+      //Update just this buttons UI
+      const iconSpan = favoriteBtn.querySelector("span");
+      if (iconSpan) {
+        iconSpan.innerHTML = `
+        ${nowFav
+          ? Icons.heartSolid({ className: "h-4 w-4 text-rose-500"})
+          : Icons.heart({ className: "h-4 w-4 text-rose-400"})
+        }
+        ${nowFav ? "Ta bort favorit" : "Lägg i favoriter"}
+        `;
+      }
+    });
 
     const handleAction = async (btn: HTMLButtonElement, action: "watchlist" | "watched") => {
       // Check local dbMovie state directly

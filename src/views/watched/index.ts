@@ -2,6 +2,8 @@ import { getMovies, deleteMovie, updateMovie } from "../../services/movieApi";
 import createMovieModal from "../../components/Modal";
 import type { DatabaseMovie } from "../../types/movie";
 import { ratingComponent } from "../../components/review-rating";
+import { isFavorite, toggleFavorite, syncFavoriteToDatabase } from "../../lib/favorites";
+import { Icons } from "../../components/icons";
 
 export default function watched(): HTMLElement {
   const container = document.createElement("div");
@@ -107,7 +109,7 @@ function createWatchedCard(movie: DatabaseMovie, onRemove: () => void): HTMLElem
     <div class="poster-container relative aspect-[2/3] w-full bg-zinc-800 shrink-0 cursor-pointer overflow-hidden">
       <img src="${imageUrl}" alt="${movie.title}" loading="lazy"
         class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
-      
+
       <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent"></div>
 
       <button class="btn-delete absolute right-3 top-3 z-30 rounded-full bg-black/60 p-2 text-white/70 ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-rose-500 hover:text-white hover:scale-110">
@@ -123,6 +125,10 @@ function createWatchedCard(movie: DatabaseMovie, onRemove: () => void): HTMLElem
 
       <div class="rating-slot flex justify-center py-2 bg-white/5 rounded-lg"></div>
       <div class="review-slot"></div>
+
+      <button class="btn-favorite rounded-lg border border-white/10 bg-white/5 px-2 py-2 text-[11px] font-semibold text-white/80 hover:bg-white/10 transition">
+        <span class="inline-flex items-center justify-center gap-2"></span>
+      </button>
     </div>
   `;
 
@@ -146,10 +152,10 @@ function createWatchedCard(movie: DatabaseMovie, onRemove: () => void): HTMLElem
   deleteBtn.addEventListener("click", async (e) => {
     e.stopPropagation();
     if(!confirm("Ta bort från historiken?")) return;
-    
+
     card.style.opacity = "0.5";
     card.style.pointerEvents = "none";
-    
+
     try {
       await deleteMovie(movie.id);
       card.remove();
@@ -162,6 +168,48 @@ function createWatchedCard(movie: DatabaseMovie, onRemove: () => void): HTMLElem
     }
   });
 
+  // --- Favorite Button Logic ---
+  const favoriteBtn = card.querySelector(".btn-favorite") as HTMLButtonElement;
+
+  const updateFavoriteButtonUI = () => {
+    const fav = isFavorite(movie.tmdb_id);
+    const iconSpan = favoriteBtn.querySelector("span");
+    if (iconSpan) {
+      iconSpan.innerHTML = `
+        ${fav
+          ? Icons.heartSolid({ className: "h-4 w-4 text-rose-500" })
+          : Icons.heart({ className: "h-4 w-4 text-rose-400" })
+        }
+        ${fav ? "Ta bort favorit" : "Lägg i favoriter"}
+      `;
+    }
+  };
+
+  // Set initial state
+  updateFavoriteButtonUI();
+
+  favoriteBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+
+    // Create TMDBMovie-like object for toggleFavorite
+    const tmdbMovie = {
+      id: movie.tmdb_id,
+      title: movie.title,
+      overview: movie.overview || "",
+      poster_path: movie.poster_path || "",
+      release_date: movie.release_date || "",
+      vote_average: movie.vote_average || 0,
+      genre_ids: [] as number[],
+    };
+
+    toggleFavorite(tmdbMovie);
+    updateFavoriteButtonUI();
+
+    // Sync to database so the recommendation algorithm gets the +5 weight bonus
+    const nowFav = isFavorite(movie.tmdb_id);
+    syncFavoriteToDatabase(movie, nowFav);
+  });
+  // --- End Favorite Button Logic ---
 
   card.addEventListener("click", () => {
     // Convert DatabaseMovie to TMDBMovie structure for the modal
