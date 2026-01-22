@@ -24,7 +24,7 @@ export default function watched(): HTMLElement {
   `;
   
   const clearBtn = document.createElement("button");
-  clearBtn.className = "rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-xs font-semibold text-rose-500/60 transition hover:bg-rose-600/15 hover:text-rose-600/60 disabled:opacity-50 disabled:cursor-not-allowed";
+  clearBtn.className = "flex items-center content-center rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-xs font-semibold text-rose-500/60 transition hover:bg-rose-600/15 hover:text-rose-500/60 disabled:opacity-50 disabled:cursor-not-allowed";
   clearBtn.textContent = "Rensa hela listan";
 
   header.appendChild(titleGroup);
@@ -95,7 +95,7 @@ export default function watched(): HTMLElement {
 
 function createWatchedCard(movie: DatabaseMovie, onRemove: () => void): HTMLElement {
   const card = document.createElement("article");
-  card.className = "group relative overflow-hidden rounded-2xl bg-zinc-800/10 ring-1 ring-white/10 transition hover:ring-white/20 flex flex-col";
+  card.className = "group relative overflow-hidden rounded-2xl bg-zinc-900 ring-1 ring-white/10 transition hover:ring-white/20 flex flex-col";
 
   const imageUrl = movie.poster_path
     ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
@@ -108,9 +108,9 @@ function createWatchedCard(movie: DatabaseMovie, onRemove: () => void): HTMLElem
       <img src="${imageUrl}" alt="${movie.title}" loading="lazy"
         class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
       
-      <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent"></div>
+      <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/30 to-transparent transition duration-500 group-hover:scale-[1.03]"></div>
 
-      <button class="btn-delete absolute right-3 top-3 z-30 rounded-full bg-black/60 p-2 text-white/70 ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-rose-600/60 hover:text-white hover:scale-110">
+      <button class="btn-delete absolute right-3 top-3 z-30 rounded-full bg-black/60 p-2 text-white/70 ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-rose-600/50 hover:text-white hover:scale-110">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
       </button>
     </div>
