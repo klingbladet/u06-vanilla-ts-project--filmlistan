@@ -1,6 +1,6 @@
 /* Design tokens */
 :root {
-  --color-background: #09090b; /* zinc-950 */
+  --color-background: #1a1a1c; /* zinc-950 */
   --color-surface: #0f0f12;
   --color-surface-2: #141418;
   --color-text: #ffffff;
@@ -40,7 +40,7 @@ img { max-width: 100%; display: block; }
 /* Active nav link (main.ts sätter class "active") */
 .nav-link.active {
   background: #bf001f;
-  color: #000 !important;
+  color: oklch(10% 0 0) !important;
   font-weight: 600;
 }
 

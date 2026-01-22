@@ -5,7 +5,7 @@ import { ratingComponent } from "../../components/review-rating";
 
 export default function watched(): HTMLElement {
   const container = document.createElement("div");
-  container.className = "min-h-screen bg-zinc-950 text-white";
+  container.className = "min-h-screen bg-zinc-900/90 text-white/80";
 
   const inner = document.createElement("div");
   inner.className = "max-w-7xl mx-auto px-4 py-6";
@@ -16,15 +16,15 @@ export default function watched(): HTMLElement {
 
   const titleGroup = document.createElement("div");
   titleGroup.innerHTML = `
-    <div class="inline-flex items-center rounded-lg bg-red px-3 py-1 text-xs font-extrabold tracking-wide text-black mb-2">
+    <div class="inline-flex items-center rounded-lg bg-red-500/75 px-3 py-1 text-xs font-bold tracking-wide text-zinc-800 mb-2">
       HISTORY
     </div>
-    <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">Sedda filmer</h1>
-    <p class="text-zinc-400 mt-1 text-sm">Din historik och dina recensioner.</p>
+    <h1 class="text-3xl md:text-4xl font-semibold tracking-tight">Sedda filmer</h1>
+    <p class="text-zinc-500 mt-1 text-sm">Din historik och dina recensioner.</p>
   `;
   
   const clearBtn = document.createElement("button");
-  clearBtn.className = "rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-xs font-bold text-rose-400 transition hover:bg-rose-500/10 hover:text-rose-300 disabled:opacity-50 disabled:cursor-not-allowed";
+  clearBtn.className = "rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-xs font-semibold text-rose-500/60 transition hover:bg-rose-600/15 hover:text-rose-600/60 disabled:opacity-50 disabled:cursor-not-allowed";
   clearBtn.textContent = "Rensa hela listan";
 
   header.appendChild(titleGroup);
@@ -44,8 +44,8 @@ export default function watched(): HTMLElement {
     grid.innerHTML = `
       <div class="col-span-full flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5 p-12 text-center">
         <div class="text-4xl mb-4">🎬</div>
-        <h3 class="text-lg font-bold text-white">Inga sedda filmer än</h3>
-        <p class="text-zinc-400 text-sm mt-2">När du markerar filmer som "Watched" hamnar de här.</p>
+        <h3 class="text-lg font-semibold text-white/80">Inga sedda filmer än</h3>
+        <p class="text-zinc-500 text-sm mt-2">När du markerar filmer som "Watched" hamnar de här.</p>
       </div>
     `;
   }
@@ -95,7 +95,7 @@ export default function watched(): HTMLElement {
 
 function createWatchedCard(movie: DatabaseMovie, onRemove: () => void): HTMLElement {
   const card = document.createElement("article");
-  card.className = "group relative overflow-hidden rounded-2xl bg-zinc-900/60 ring-1 ring-white/10 transition hover:ring-white/20 flex flex-col";
+  card.className = "group relative overflow-hidden rounded-2xl bg-zinc-800/10 ring-1 ring-white/10 transition hover:ring-white/20 flex flex-col";
 
   const imageUrl = movie.poster_path
     ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
@@ -110,14 +110,14 @@ function createWatchedCard(movie: DatabaseMovie, onRemove: () => void): HTMLElem
       
       <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent"></div>
 
-      <button class="btn-delete absolute right-3 top-3 z-30 rounded-full bg-black/60 p-2 text-white/70 ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-rose-500 hover:text-white hover:scale-110">
+      <button class="btn-delete absolute right-3 top-3 z-30 rounded-full bg-black/60 p-2 text-white/70 ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-rose-600/60 hover:text-white hover:scale-110">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
       </button>
     </div>
 
     <div class="p-4 flex flex-col gap-4 flex-1">
       <div>
-        <h3 class="text-lg font-bold text-white line-clamp-1">${movie.title}</h3>
+        <h3 class="text-lg font-semibold text-white/80 line-clamp-1">${movie.title}</h3>
         <p class="text-xs text-zinc-500">Sedd: ${dateWatched}</p>
       </div>
 

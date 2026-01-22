@@ -27,7 +27,7 @@ export function SearchComponent(): HTMLElement {
   const button = document.createElement("button");
   button.type = "submit";
   button.className =
-    "h-10 rounded-xl bg-red px-4 text-sm font-semibold text-black transition hover:bg-red-800";
+    "h-10 rounded-xl bg-red-500/75 px-4 text-sm font-semibold text-black transition hover:bg-red-500/55";
   button.textContent = "Sök";
 
   const clearBtn = document.createElement("button");
@@ -48,10 +48,10 @@ export function SearchComponent(): HTMLElement {
   form.appendChild(clearBtn);
 
   form.addEventListener("focusin", () => {
-    form.classList.add("ring-red-800/15");
+    form.classList.add("ring-red-500/15");
   });
   form.addEventListener("focusout", () => {
-    form.classList.remove("ring-red-800/15");
+    form.classList.remove("ring-red-500/15");
   });
 
   form.addEventListener("submit", (e) => {

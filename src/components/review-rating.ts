@@ -89,7 +89,7 @@ export function ratingComponent(initialRating: number = 0, onRate?: (rating: num
   scoreText.className = "text-xs text-zinc-400 mb-1";
   
   scoreNumber.textContent = initialRating > 0 ? `${initialRating}/5` : '-';
-  scoreNumber.className = "text-sm font-bold text-white mt-1";
+  scoreNumber.className = "text-sm font-semibold text-white/80 mt-1";
   
   starsContainer.style.display = 'inline-block';
 
@@ -103,7 +103,7 @@ export function ratingComponent(initialRating: number = 0, onRate?: (rating: num
       starElement.classList.add('star');
       starElement.style.cursor = 'pointer';
       starElement.style.fontSize = '1.2rem';
-      starElement.style.color = i <= currentRating ? '#fbbf24' : '#52525b'; // amber-400 vs zinc-600
+      starElement.style.color = i <= currentRating ? '#fbbe24e2' : '#52525b'; // amber-400 vs zinc-600
       starElement.dataset.value = i.toString();
       starsContainer.append(starElement);
     }

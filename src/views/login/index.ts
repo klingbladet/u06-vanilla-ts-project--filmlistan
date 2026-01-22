@@ -2,7 +2,7 @@ import { login, isLoggedIn } from "../../lib/auth";
 
 export default function loginView(): HTMLElement {
   const container = document.createElement("div");
-  container.className = "min-h-screen bg-zinc-950 text-white";
+  container.className = "min-h-screen bg-zinc-950 text-white/80";
 
   const inner = document.createElement("div");
   inner.className = "max-w-3xl mx-auto px-4 py-10";
@@ -10,13 +10,13 @@ export default function loginView(): HTMLElement {
 
   inner.innerHTML = `
     <div class="rounded-2xl border border-white/10 bg-white/5 p-6 md:p-8">
-      <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+      <h1 class="text-2xl md:text-3xl font-bold tracking-tight">
         Logga in
       </h1>
 
       <p class="mt-2 text-sm text-white/70">
-        Demo-konto: <span class="font-semibold text-white">demo@filmkollen.se</span> /
-        <span class="font-semibold text-white">film123</span>
+        Demo-konto: <span class="font-semibold text-white/80">demo@filmkollen.se</span> /
+        <span class="font-semibold text-white/80">film123</span>
       </p>
 
       <div id="msg" class="mt-4 hidden rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200"></div>
@@ -28,7 +28,7 @@ export default function loginView(): HTMLElement {
             id="email"
             type="email"
             placeholder="demo@filmkollen.se"
-            class="rounded-xl border border-white/10 bg-zinc-900 px-4 py-3 text-sm text-white outline-none focus:ring-1 focus:ring-red-800/40"
+            class="rounded-xl border border-white/10 bg-zinc-900 px-4 py-3 text-sm text-white/80 outline-none focus:ring-1 focus:ring-red-500/20"
           />
         </label>
 
@@ -38,13 +38,13 @@ export default function loginView(): HTMLElement {
             id="password"
             type="password"
             placeholder="film123"
-            class="rounded-xl border border-white/10 bg-zinc-900 px-4 py-3 text-sm text-white outline-none focus:ring-1 focus:ring-red-800/40"
+            class="rounded-xl border border-white/10 bg-zinc-900 px-4 py-3 text-sm text-white/80 outline-none focus:ring-1 focus:ring-red-500/20"
           />
         </label>
 
         <button
           type="submit"
-          class="mt-2 rounded-xl bg-red px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-800"
+          class="mt-2 rounded-xl bg-red-500/75 px-4 py-3 text-sm font-semibold text-white/80 transition hover:bg-red-500/55"
         >
           Logga in
         </button>
