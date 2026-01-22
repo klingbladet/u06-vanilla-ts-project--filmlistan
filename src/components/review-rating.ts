@@ -1,4 +1,4 @@
-export function reviewComponent(initialReview: string = '', onSubmit?: (review: string) => void) {
+export function reviewComponent(isLoggedIn: boolean, initialReview: string = '', onSubmit?: (review: string) => void) {
 
   const reviewContainer = document.createElement('div');
   const reviewForm = document.createElement('form');
@@ -6,10 +6,14 @@ export function reviewComponent(initialReview: string = '', onSubmit?: (review: 
   const reviewText = document.createElement('textarea');
   const submitReviewBtn = document.createElement('button');
 
-  nameInput.type = 'text'
-  nameInput.placeholder = 'Ditt namn (valfritt)';
-  nameInput.style.fontStyle = 'italic';
-  nameInput.className = "w-full bg-black/20 mb-3 border border-white/10 rounded-lg p-3 text-sm text-zinc-200 focus:outline-none focus:border-amber-400/50";
+  // Om man är inloggad behöver man inte skriva namn
+  if (!isLoggedIn) {
+    nameInput.type = 'text'
+    nameInput.placeholder = 'Ditt namn (valfritt)';
+    nameInput.style.fontStyle = 'italic';
+    nameInput.className = "w-full bg-black/20 mb-3 border border-white/10 rounded-lg p-3 text-sm text-zinc-200 focus:outline-none focus:border-amber-400/50";
+    reviewForm.appendChild(nameInput);
+  }
 
   reviewForm.style.display = 'flex';
   reviewForm.style.flexDirection = 'column'
@@ -29,7 +33,7 @@ export function reviewComponent(initialReview: string = '', onSubmit?: (review: 
   submitReviewBtn.style.marginTop = '15px'
   submitReviewBtn.className = "self-end px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg transition-colors"
 
-  reviewForm.append(nameInput, reviewText, submitReviewBtn);
+  reviewForm.append(reviewText, submitReviewBtn);
 
   const reviewsList = document.createElement('div');
   reviewsList.className = "mt-4 space-y-3 border-t border-white/10 pt-4";
@@ -61,7 +65,9 @@ export function reviewComponent(initialReview: string = '', onSubmit?: (review: 
   reviewForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const text = reviewText.value;
-    const author = nameInput.value || "Anonym";
+    // Om inloggad, använd "Du" (eller hämta namn från Clerk i framtiden), annars input-värdet
+    const author = isLoggedIn ? "Du" : (nameInput.value || "Anonym");
+    
     if (!text.trim()) return;
     renderReviewItem(text, author);
 

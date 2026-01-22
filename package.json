@@ -16,6 +16,7 @@
   "description": "Ni ska utveckla en applikation för att hålla koll på filmer där användare kan bläddra bland filmer, hantera sin watchlist och hålla reda på sedda filmer med betyg och recensioner. Syftet med uppgiften är att öva på API‑integration, CRUD‑operationer och att bygga en strukturerad TypeScript‑applikation.",
   "main": "index.js",
   "dependencies": {
+    "@clerk/clerk-js": "^5.121.0",
     "@tailwindcss/vite": "^4.1.18",
     "better-sqlite3": "^12.6.2",
     "esbuild": "^0.25.12",

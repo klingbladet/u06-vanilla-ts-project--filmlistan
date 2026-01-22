@@ -25,6 +25,7 @@ db.pragma('foreign_keys = ON');
 const createMoviesTable = `
   CREATE TABLE IF NOT EXISTS movies (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT NOT NULL,
     tmdb_id INTEGER NOT NULL,
     title TEXT NOT NULL,
     poster_path TEXT,
@@ -37,7 +38,7 @@ const createMoviesTable = `
     is_favorite INTEGER DEFAULT 0,
     date_added TEXT DEFAULT (datetime('now')),
     date_watched TEXT,
-    UNIQUE(tmdb_id)
+    UNIQUE(tmdb_id, user_id)
   )
 `;
 

@@ -1,4 +1,4 @@
-import type { DatabaseMovie, TMDBMovie } from '../types/movie';
+import type { DatabaseMovie, TMDBMovie } from '../types/movie.ts';
 import { reviewComponent, ratingComponent } from './review-rating';
 import { updateMovie, upsertMovieStatusByTmdbId } from '../services/movieApi';
 
@@ -141,8 +141,11 @@ export default function createMovieModal(movie: TMDBMovie, dbMovie?: DatabaseMov
 
   const reviewSlot = modal.querySelector('.review-slot');
   if (reviewSlot) {
+    // @ts-ignore
+    const isUserLoggedIn = !!(window.Clerk && window.Clerk.user);
     const initialReview = dbMovie?.review || '';
-    const reviewWidget = reviewComponent(initialReview, async (newReviewText) => {
+    
+    const reviewWidget = reviewComponent(isUserLoggedIn, initialReview, async (newReviewText) => {
       if (dbMovie) {
         try {
           await updateMovie(dbMovie.id, { review: newReviewText });

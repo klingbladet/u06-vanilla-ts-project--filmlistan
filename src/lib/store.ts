@@ -1,6 +1,10 @@
-import type { TMDBMovie, DatabaseMovie, WeightedMovie, ScoredRecommendation } from "../types/movie";
+import type { TMDBMovie, DatabaseMovie, WeightedMovie, ScoredRecommendation } from "../types/movie.ts";
 import { getPopularMoviesTMDB, searchMoviesTMDB, getRecommendationsTMDB, getSimilarMoviesTMDB } from "../services/tmdbApi.ts";
 import { getMovies } from "../services/movieApi.ts";
+// import { Clerk } from "@clerk/clerk-js";
+
+
+// export const clerk = new Clerk(pubKey);
 
 //Vi räknar hur många dagar sen en film har lagts till för att ge fördel till nyligen sedda filmer
 function getDaysSince(dateString: string): number {
@@ -105,6 +109,8 @@ class Store {
   recommendedBasedOn: string = "";// Title på filmen vi baserar tips på
   isSearching: boolean = false;    // Är vi i "sökläge" just nu
   currentSearchQuery: string = ""; // Vad vi sökte på
+
+  
 
   // State för filter-inställningar
   activeFilters = {

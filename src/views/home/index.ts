@@ -1,15 +1,14 @@
-import type { TMDBMovie, DatabaseMovie, Genre } from "../../types/movie"; // Merged import: added Genre
-import { store, loadPopularMovies, loadRecommendations, ensurePopularCount } from "../../lib/store"; // Merged import: added loadRecommendations, ensurePopularCount
+import type { TMDBMovie, DatabaseMovie, Genre } from "../../types/movie.ts"; // Merged import: added Genre
+import { store, loadPopularMovies, loadRecommendations, ensurePopularCount, setRenderCallback } from "../../lib/store"; // Merged import: added loadRecommendations, ensurePopularCount
 import { SearchComponent } from "../../components/search";
 import createMovieModal from "../../components/Modal";
 import { getMovies, upsertMovieStatusByTmdbId } from "../../services/movieApi";
-import { isLoggedIn } from "../../lib/auth";
 import { getFavorites, isFavorite, toggleFavorite } from "../../lib/favorites";
 import { Icons } from "../../components/icons";
 import { getGenres } from '../../services/tmdbApi'; // Keep getGenres
 import { createFilterComponent } from '../../components/filter'; // Keep createFilterComponent
 
-export default function home(): HTMLElement {
+export default function home(isLoggedIn: boolean): HTMLElement {
   const container = document.createElement("div");
   container.className = "home-view p-4 max-w-7xl mx-auto";
 
@@ -389,6 +388,8 @@ export default function home(): HTMLElement {
   });
   // --- End Filter update trigger ---
 
+  // Listen to store updates (search etc)
+  setRenderCallback(buildFullListForCurrentView);
 
   // Load DB movies
   getMovies()
@@ -465,7 +466,7 @@ export default function home(): HTMLElement {
 
     // Favorite
     if (action === "favorite") {
-      if (!isLoggedIn()) {
+      if (!isLoggedIn) {
         showToast("Du måste logga in först.", false);
         window.history.pushState({}, "", "/login");
         window.dispatchEvent(new PopStateEvent("popstate"));
@@ -479,7 +480,7 @@ export default function home(): HTMLElement {
     }
 
     // Watchlist / watched
-    if (!isLoggedIn()) {
+    if (!isLoggedIn) {
       showToast("Du måste logga in först.", false);
       window.history.pushState({}, "", "/login");
       window.dispatchEvent(new PopStateEvent("popstate"));
@@ -679,7 +680,7 @@ export default function home(): HTMLElement {
         genre_ids: movie.genre_ids || [],
       };
 
-      const { modal, openModal } = createMovieModal(tmdbFormat, dbMovie, (updatedMovie) => {
+      const { modal, openModal } = createMovieModal(tmdbFormat, dbMovie, (updatedMovie: DatabaseMovie) => {
         const idx = savedMovies.findIndex((m) => m.id === updatedMovie.id)
         if (idx >= 0) {
           savedMovies[idx] = updatedMovie;

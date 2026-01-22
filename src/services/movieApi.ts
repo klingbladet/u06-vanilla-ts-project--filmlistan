@@ -1,13 +1,24 @@
 // API-anrop till Movie API
-import type { DatabaseMovie, TMDBMovie } from "../types/movie";
+import type { DatabaseMovie, TMDBMovie } from "../types/movie.ts";
 
 const API_BASE_URL = "http://localhost:3000/api";
-const USER_ID = "Chas-n-Chill";
 
-const headers: Record<string, string> = {
-  "Content-Type": "application/json",
-  "x-user-id": USER_ID,
-};
+async function getHeaders(): Promise<HeadersInit> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  // Försök hämta token från Clerk om det finns
+  // @ts-ignore - Clerk kanske inte har typer globalt tillgängliga här än
+  if (window.Clerk && window.Clerk.session) {
+    const token = await window.Clerk.session.getToken();
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+  }
+
+  return headers;
+}
 
 /**
  * Body-typen som backend accepterar (matchar server/src/routes/movies.ts)
@@ -28,7 +39,7 @@ type CreateMovieBody = {
 };
 
 export async function getMovies(): Promise<DatabaseMovie[]> {
-  const response = await fetch(`${API_BASE_URL}/movies`, { headers });
+  const response = await fetch(`${API_BASE_URL}/movies`, { headers: await getHeaders() });
 
   if (!response.ok) {
     throw new Error("Kunde inte hämta filmerna");
@@ -40,7 +51,7 @@ export async function getMovies(): Promise<DatabaseMovie[]> {
 export async function addMovie(movie: CreateMovieBody): Promise<DatabaseMovie> {
   const response = await fetch(`${API_BASE_URL}/movies`, {
     method: "POST",
-    headers,
+    headers: await getHeaders(),
     body: JSON.stringify(movie),
   });
 
@@ -62,7 +73,7 @@ export async function updateMovie(
 ): Promise<DatabaseMovie> {
   const response = await fetch(`${API_BASE_URL}/movies/${id}`, {
     method: "PUT",
-    headers,
+    headers: await getHeaders(),
     body: JSON.stringify(data),
   });
 
@@ -81,7 +92,7 @@ export async function updateMovie(
 export async function deleteMovie(id: number): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/movies/${id}`, {
     method: "DELETE",
-    headers,
+    headers: await getHeaders(),
   });
 
   if (!response.ok) {

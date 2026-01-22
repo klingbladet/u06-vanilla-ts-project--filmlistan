@@ -1,111 +1,149 @@
 import "./style.css";
-import { setRenderCallback } from "./lib/store.ts";
-import { isLoggedIn, logout, getUser } from "./lib/auth";
-
-import headerHTML from "./views/static/header/index.html?raw";
+import { createHeader } from "./views/static/header/index";
 import footerHTML from "./views/static/footer/index.html?raw";
 
-
-// Dynamiska sidor
+// Vyer
 import home from "./views/home/index.ts";
 import watchlist from "./views/watchlist/index.ts";
 import watched from "./views/watched/index.ts";
 import loginView from "./views/login/index.ts";
 import authRequired from "./views/auth-required/index.ts";
+import { Clerk } from '@clerk/clerk-js';
 
-const app = document.querySelector("#app")!;
 
-const currentPage = (): string | HTMLElement => {
+// Hämta nyckel
+const pubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+if (!pubKey) {
+  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY");
+}
+
+export const clerk = new Clerk(pubKey);
+// @ts-ignore
+window.Clerk = clerk;
+const app = document.querySelector<HTMLDivElement>("#app")!;
+
+// --- ROUTER ---
+const getCurrentPageContent = (): string | HTMLElement => {
   const path = window.location.pathname;
 
-  if (path === "/watchlist" && !isLoggedIn()) {
-    return authRequired("Logga in för att se din Watchlist");
-  }
-  if (path === "/watched" && !isLoggedIn()) {
-    return authRequired("Logga in för att se dina Watched-filmer");
+  // Skyddade rutter
+  if ((path === "/watchlist" || path === "/watched") && !clerk.user) {
+    return authRequired("Du måste logga in för att se denna sida.");
   }
 
   switch (path) {
     case "/":
-      return home();
+      return home(!!clerk.user);
     case "/watchlist":
-      return watchlist();
+      return watchlist(!!clerk.user);
     case "/watched":
-      return watched();
+      return watched(!!clerk.user);
     case "/login":
+      // Om man redan är inloggad och går till /login -> skicka till hem
+      if (clerk.user) {
+        window.history.replaceState({}, "", "/");
+        return home(!!clerk.user);
+      }
       return loginView();
     default:
-      return "404";
+      return "404 - Sidan hittades inte";
   }
 };
 
-function setActiveNavLink() {
+// --- RENDER ---
+async function renderApp() {
+  // 1. Töm appen
+  app.innerHTML = "";
+
+  // 2. Skapa och lägg till Header
+  const header = createHeader(!!clerk.user);
+  app.appendChild(header);
+
+  // 3. Hämta och lägg till sidinnehåll
+  const content = getCurrentPageContent();
+  
+  const main = document.createElement("main");
+  main.className = "mx-auto max-w-7xl px-4 py-10 text-white min-h-[calc(100vh-200px)]"; // Min-height för att footern inte ska flyga upp
+
+  if (typeof content === "string") {
+    main.innerHTML = `<h1 class="text-xl font-bold">${content}</h1>`;
+  } else {
+    main.appendChild(content);
+  }
+  
+  app.appendChild(main);
+
+  // 4. Lägg till Footer
+  const footer = document.createElement("div");
+  footer.innerHTML = footerHTML;
+  app.appendChild(footer);
+
+  // 5. Efter-rendering logik (Montera Clerk komponenter)
+  
+  // A. Montera UserButton i headern om vi är inloggade
+  if (clerk.user) {
+    const userBtnDiv = document.getElementById("clerk-user-button") as HTMLDivElement;
+    if (userBtnDiv) {
+      clerk.mountUserButton(userBtnDiv);
+    }
+  }
+
+  // B. Montera SignIn om vi är på inloggningssidan
+  if (window.location.pathname === "/login") {
+    const signInDiv = document.getElementById("clerk-sign-in") as HTMLDivElement;
+    if (signInDiv) {
+      clerk.mountSignIn(signInDiv, {
+        appearance: {
+          variables: {
+            colorPrimary: '#fbbf24' // Amber-400 för att matcha din design
+          }
+        }
+      });
+    }
+  }
+
+  // C. Uppdatera aktiv länk styling
+  updateActiveLink();
+}
+
+function updateActiveLink() {
   const path = window.location.pathname;
-  document.querySelectorAll<HTMLAnchorElement>(".nav-link").forEach((a) => {
-    const href = a.getAttribute("href") || "";
-    a.classList.toggle("active", href === path);
+  document.querySelectorAll(".nav-link").forEach((a) => {
+    const href = a.getAttribute("href");
+    if (href === path) {
+      a.classList.add("bg-white/10", "text-white");
+      a.classList.remove("text-white/75");
+    } else {
+      a.classList.remove("bg-white/10", "text-white");
+      a.classList.add("text-white/75");
+    }
   });
 }
 
-function syncHeaderAuthUI() {
-  const loginLink = document.querySelector<HTMLAnchorElement>("#loginLink");
-  const logoutBtn = document.querySelector<HTMLButtonElement>("#logoutBtn");
-  if (!loginLink || !logoutBtn) return;
-
-  if (isLoggedIn()) {
-    const user = getUser();
-    loginLink.textContent = user?.email ?? "Konto";
-    loginLink.href = "/";
-    logoutBtn.classList.remove("hidden");
-  } else {
-    loginLink.textContent = "Logga in";
-    loginLink.href = "/login";
-    logoutBtn.classList.add("hidden");
-  }
-
-  logoutBtn.onclick = () => {
-    logout();
-    window.history.pushState({}, "", "/");
-    renderApp();
-  };
+// --- INIT ---
+async function init() {
+  await clerk.load();
+  renderApp();
 }
 
-const renderApp = () => {
-  const page = currentPage();
+// Starta
+init();
 
-  if (typeof page === "string") {
-    app.innerHTML = `
-      ${headerHTML}
-      <main class="mx-auto max-w-7xl px-4 py-10 text-white">
-        <h1 class="text-xl font-bold">${page}</h1>
-      </main>
-      ${footerHTML}
-    `;
-  } else {
-    app.innerHTML = `${headerHTML}${footerHTML}`;
-    app.insertBefore(page, app.querySelector("footer")!);
-  }
-
-  setActiveNavLink();
-  syncHeaderAuthUI();
-};
-
-renderApp();
-
-window.addEventListener("popstate", () => renderApp());
-
+// --- EVENTS ---
+// Hantera navigation utan omladdning (SPA)
 document.addEventListener("click", (e) => {
   const target = e.target as HTMLElement;
-  const link = target.closest("a") as HTMLAnchorElement | null;
+  const link = target.closest("a");
+  
   if (!link) return;
-
-  if (!link.href.startsWith(window.location.origin)) return;
-  if (e.ctrlKey || e.metaKey || e.shiftKey || (e as MouseEvent).button === 1) return;
-
+  // Om det är en extern länk eller har target="_blank", låt den vara
+  if (!link.href.startsWith(window.location.origin) || link.target === "_blank") return;
+  
   e.preventDefault();
   const path = new URL(link.href).pathname;
   window.history.pushState({}, "", path);
   renderApp();
 });
 
-setRenderCallback(renderApp);
+// Hantera bakåt/framåt-knappar i webbläsaren
+window.addEventListener("popstate", () => renderApp());

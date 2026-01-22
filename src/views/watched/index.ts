@@ -3,7 +3,7 @@ import createMovieModal from "../../components/Modal";
 import type { DatabaseMovie } from "../../types/movie";
 import { ratingComponent } from "../../components/review-rating";
 
-export default function watched(): HTMLElement {
+export default function watched(isLoggedIn: boolean): HTMLElement {
   const container = document.createElement("div");
   container.className = "min-h-screen bg-zinc-950 text-white";
 
