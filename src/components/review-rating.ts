@@ -1,4 +1,4 @@
-export function reviewComponent(isLoggedIn: boolean, initialReview: string = '', onSubmit?: (review: string) => void) {
+export function reviewComponent(isLoggedIn: boolean, initialReview: string = '', onSubmit?: (review: string) => void, userName: string = 'Du') {
 
   const reviewContainer = document.createElement('div');
   const reviewForm = document.createElement('form');
@@ -59,14 +59,14 @@ export function reviewComponent(isLoggedIn: boolean, initialReview: string = '',
   };
 
   if(initialReview) {
-    renderReviewItem(initialReview, "Du");
+    renderReviewItem(initialReview, isLoggedIn ? userName : "Anonym");
   }
 
   reviewForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const text = reviewText.value;
-    // Om inloggad, använd "Du" (eller hämta namn från Clerk i framtiden), annars input-värdet
-    const author = isLoggedIn ? "Du" : (nameInput.value || "Anonym");
+    // Om inloggad, använd userName, annars input-värdet
+    const author = isLoggedIn ? userName : (nameInput.value || "Anonym");
     
     if (!text.trim()) return;
     renderReviewItem(text, author);

@@ -1,12 +1,17 @@
 import express, { Request, Response } from 'express';
 import db from '../database.js';
+import { requireAuth } from '../middleware/auth.js';
 
 const router = express.Router();
+
+// Alla rutter här kräver inloggning
+router.use(requireAuth);
 
 type MovieStatus = 'watchlist' | 'watched';
 
 interface Movie {
   id: number;
+  user_id: string;
   tmdb_id: number;
   title: string;
   poster_path: string | null;
@@ -53,19 +58,20 @@ interface StatsResponse {
 
 /**
  * GET /api/movies
- * Hämta alla filmer
+ * Hämta alla filmer för inloggad användare
  * Query params status=watchlist|watched
  */
 router.get('/', (req: Request, res: Response) => {
   try {
+    const userId = req.auth!.userId;
     const { status } = req.query as { status?: MovieStatus };
 
-    let query = 'SELECT * FROM movies';
-    const params: unknown[] = [];
+    let query = 'SELECT * FROM movies WHERE user_id = ?';
+    const params: unknown[] = [userId];
 
     // Filtrera på status om den skickas in
     if (status) {
-      query += ' WHERE status = ?';
+      query += ' AND status = ?';
       params.push(status);
     }
 
@@ -84,21 +90,22 @@ router.get('/', (req: Request, res: Response) => {
 });
 
 /**
- * GET /api/movies/ id
- * Hämta en specifik film via ID
+ * GET /api/movies/:id
+ * Hämta en specifik film via ID (måste tillhöra användaren)
  */
 router.get('/:id', (req: Request, res: Response) => {
   try {
+    const userId = req.auth!.userId;
     const { id } = req.params;
 
     const movie = db
-      .prepare('SELECT * FROM movies WHERE id = ?')
-      .get(id) as Movie | undefined;
+      .prepare('SELECT * FROM movies WHERE id = ? AND user_id = ?')
+      .get(id, userId) as Movie | undefined;
 
     if (!movie) {
       return res.status(404).json({
         error: 'Movie not found',
-        hint: 'Make sure the movie exists and belongs to your user'
+        hint: 'Make sure the movie exists and belongs to you'
       });
     }
 
@@ -114,11 +121,11 @@ router.get('/:id', (req: Request, res: Response) => {
 
 /**
  * POST /api/movies
- * Lägg till en ny film (i watchlist eller watched)
- * Body: { tmdb_id, title, poster_path, release_date, vote_average, overview, status, personal_rating, review, is_favorite, date_watched }
+ * Lägg till en ny film för inloggad användare
  */
 router.post('/', (req: Request<unknown, unknown, CreateMovieBody>, res: Response) => {
   try {
+    const userId = req.auth!.userId;
     const {
       tmdb_id,
       title,
@@ -159,16 +166,17 @@ router.post('/', (req: Request<unknown, unknown, CreateMovieBody>, res: Response
       }
     }
 
-    // Spara filmen i databasen
+    // Spara filmen i databasen med user_id
     const stmt = db.prepare(`
       INSERT INTO movies (
-        tmdb_id, title, poster_path, release_date,
+        user_id, tmdb_id, title, poster_path, release_date,
         vote_average, overview, status, personal_rating,
         review, is_favorite, date_watched
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const result = stmt.run(
+      userId,
       tmdb_id,
       title,
       poster_path || null,
@@ -207,11 +215,11 @@ router.post('/', (req: Request<unknown, unknown, CreateMovieBody>, res: Response
 
 /**
  * PUT /api/movies/:id
- * Uppdatera en film (t.ex. flytta från watchlist till watched, uppdatera betyg/recension)
- * Body: { status, personal_rating, review, is_favorite, date_watched }
+ * Uppdatera en film (måste tillhöra användaren)
  */
 router.put('/:id', (req: Request<{ id: string }, unknown, UpdateMovieBody>, res: Response) => {
   try {
+    const userId = req.auth!.userId;
     const { id } = req.params;
     const {
       status,
@@ -221,15 +229,15 @@ router.put('/:id', (req: Request<{ id: string }, unknown, UpdateMovieBody>, res:
       date_watched
     } = req.body;
 
-    // Kolla om filmen finns
+    // Kolla om filmen finns och tillhör användaren
     const existingMovie = db
-      .prepare('SELECT * FROM movies WHERE id = ?')
-      .get(id) as Movie | undefined;
+      .prepare('SELECT * FROM movies WHERE id = ? AND user_id = ?')
+      .get(id, userId) as Movie | undefined;
 
     if (!existingMovie) {
       return res.status(404).json({
         error: 'Movie not found',
-        hint: 'Make sure the movie exists and belongs to your user'
+        hint: 'Make sure the movie exists and belongs to you'
       });
     }
 
@@ -251,7 +259,7 @@ router.put('/:id', (req: Request<{ id: string }, unknown, UpdateMovieBody>, res:
       }
     }
 
-    // Bygg upp en dynamisk UPDATEquery baserat på vilka fält som skickats in
+    // Bygg upp en dynamisk UPDATE-query
     const updates: string[] = [];
     const params: unknown[] = [];
 
@@ -285,12 +293,13 @@ router.put('/:id', (req: Request<{ id: string }, unknown, UpdateMovieBody>, res:
 
     // Lägg till parametrar till WHERE-villkoret
     params.push(id);
+    params.push(userId);
 
     // Uppdatera filmen
     const query = `
       UPDATE movies
       SET ${updates.join(', ')}
-      WHERE id = ?
+      WHERE id = ? AND user_id = ?
     `;
 
     db.prepare(query).run(...params);
@@ -312,26 +321,27 @@ router.put('/:id', (req: Request<{ id: string }, unknown, UpdateMovieBody>, res:
 
 /**
  * DELETE /api/movies/:id
- * Ta bort en film
+ * Ta bort en film (måste tillhöra användaren)
  */
 router.delete('/:id', (req: Request<{ id: string }>, res: Response) => {
   try {
+    const userId = req.auth!.userId;
     const { id } = req.params;
 
-    // Kolla om filmen finns
+    // Kolla om filmen finns och tillhör användaren
     const movie = db
-      .prepare('SELECT * FROM movies WHERE id = ?')
-      .get(id) as Movie | undefined;
+      .prepare('SELECT * FROM movies WHERE id = ? AND user_id = ?')
+      .get(id, userId) as Movie | undefined;
 
     if (!movie) {
       return res.status(404).json({
         error: 'Movie not found',
-        hint: 'Make sure the movie exists and belongs to your user'
+        hint: 'Make sure the movie exists and belongs to you'
       });
     }
 
     // Ta bort filmen
-    db.prepare('DELETE FROM movies WHERE id = ?').run(id);
+    db.prepare('DELETE FROM movies WHERE id = ? AND user_id = ?').run(id, userId);
 
     res.json({
       message: 'Movie deleted successfully',
@@ -348,34 +358,36 @@ router.delete('/:id', (req: Request<{ id: string }>, res: Response) => {
 
 /**
  * GET /api/movies/user/stats
- * Hämta statistik för alla sparade filmer
+ * Hämta statistik för inloggad användare
  */
 router.get('/user/stats', (req: Request, res: Response) => {
   try {
+    const userId = req.auth!.userId;
+
     // Räkna totalt antal filmer
     const totalMovies = (db
-      .prepare('SELECT COUNT(*) as count FROM movies')
-      .get() as { count: number }).count;
+      .prepare('SELECT COUNT(*) as count FROM movies WHERE user_id = ?')
+      .get(userId) as { count: number }).count;
 
     // Räkna antal watchlist-filmer
     const watchlistCount = (db
-      .prepare('SELECT COUNT(*) as count FROM movies WHERE status = "watchlist"')
-      .get() as { count: number }).count;
+      .prepare('SELECT COUNT(*) as count FROM movies WHERE status = "watchlist" AND user_id = ?')
+      .get(userId) as { count: number }).count;
 
     // Räkna antal watched-filmer
     const watchedCount = (db
-      .prepare('SELECT COUNT(*) as count FROM movies WHERE status = "watched"')
-      .get() as { count: number }).count;
+      .prepare('SELECT COUNT(*) as count FROM movies WHERE status = "watched" AND user_id = ?')
+      .get(userId) as { count: number }).count;
 
     // Räkna antal favoriter
     const favoritesCount = (db
-      .prepare('SELECT COUNT(*) as count FROM movies WHERE is_favorite = 1')
-      .get() as { count: number }).count;
+      .prepare('SELECT COUNT(*) as count FROM movies WHERE is_favorite = 1 AND user_id = ?')
+      .get(userId) as { count: number }).count;
 
     // Beräkna genomsnittligt personligt betyg
     const avgRow = db
-      .prepare('SELECT AVG(personal_rating) as avg FROM movies WHERE personal_rating IS NOT NULL')
-      .get() as { avg: number | null };
+      .prepare('SELECT AVG(personal_rating) as avg FROM movies WHERE personal_rating IS NOT NULL AND user_id = ?')
+      .get(userId) as { avg: number | null };
 
     const avgRating = avgRow?.avg ?? null;
 
@@ -398,5 +410,3 @@ router.get('/user/stats', (req: Request, res: Response) => {
 });
 
 export default router;
-
-

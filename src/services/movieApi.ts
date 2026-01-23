@@ -13,8 +13,13 @@ async function getHeaders(): Promise<HeadersInit> {
   if (window.Clerk && window.Clerk.session) {
     const token = await window.Clerk.session.getToken();
     if (token) {
+      // console.log("Token found, adding to headers");
       headers["Authorization"] = `Bearer ${token}`;
+    } else {
+      console.warn("Clerk session exists but no token returned.");
     }
+  } else {
+    console.warn("No Clerk session found in window.Clerk");
   }
 
   return headers;
@@ -59,7 +64,8 @@ export async function addMovie(movie: CreateMovieBody): Promise<DatabaseMovie> {
     let msg = "Kunde inte spara filmen";
     try {
       const errorData = await response.json();
-      msg = errorData.error || msg;
+      // Prefer detailed message if available
+      msg = errorData.message || errorData.error || msg;
     } catch {}
     throw new Error(msg);
   }
