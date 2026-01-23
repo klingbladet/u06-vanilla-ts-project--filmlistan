@@ -17,7 +17,7 @@ export default function authRequired(title = "Du måste logga in"): HTMLElement 
         </p>
   
         <div class="mt-6 flex flex-wrap gap-3">
-          <a href="/login" class="rounded-xl bg-amber-400 px-4 py-3 text-sm font-semibold text-black hover:bg-amber-300">
+          <a href="/login" class="rounded-xl bg-red px-4 py-3 text-sm font-semibold text-black hover:bg-red-800">
             Gå till Logga in
           </a>
   
