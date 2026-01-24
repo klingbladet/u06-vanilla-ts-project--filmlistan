@@ -122,11 +122,6 @@ export default function home(isLoggedIn: boolean): HTMLElement {
   gridWrap.className = "relative mt-6";
   inner.appendChild(gridWrap);
 
-  gridWrap.innerHTML = `
-    <div class="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-zinc-950 to-transparent"></div>
-    <div class="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-zinc-950 to-transparent"></div>
-  `;
-
   // --- Start Filter Component Re-integration ---
   // Skapa en temporär placeholder för filtren som visas medan de laddas
   const filterContainerPlaceholder = document.createElement('div');
@@ -544,7 +539,7 @@ export default function home(isLoggedIn: boolean): HTMLElement {
     const release = movie.release_date ?? "";
 
     card.innerHTML = `
-    <div class="relative aspect-[2/3] bg-zinc-800">
+    <div class="relative aspect-[2/3]">
       <img src="${imageUrl}" alt="${movie.title}" loading="lazy"
         class="h-full w-full object-cover opacity-0 transition duration-500 group-hover:scale-[1.03]" />
       <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent transition duration-500 group-hover:scale-[1.03]"></div>

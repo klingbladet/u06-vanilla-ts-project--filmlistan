@@ -1,5 +1,3 @@
-import { clerk } from "../../../main";
-
 export function createHeader(isLoggedIn: boolean) {
   const header = document.createElement("header");
   header.className = "sticky top-0 z-50 border-b border-white/10 bg-zinc-950/80 backdrop-blur";
@@ -14,7 +12,7 @@ export function createHeader(isLoggedIn: boolean) {
   const img = document.createElement("img");
   img.src = "/img/logo-chasnchill-red.png";
   img.alt = "Logo";
-  img.className = "w-auto max-h-12"; // Ändrade till tailwind klass för höjd (h-12 = ca 48px)
+  img.className = "w-auto max-h-25"; // Ändrade till tailwind klass för höjd (h-12 = ca 48px)
   anchor.appendChild(img);
 
   // NAV
