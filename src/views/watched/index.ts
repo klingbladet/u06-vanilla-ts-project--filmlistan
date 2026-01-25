@@ -5,7 +5,7 @@ import { ratingComponent } from "../../components/review-rating";
 
 export default function watched(isLoggedIn: boolean): HTMLElement {
   const container = document.createElement("div");
-  container.className = "min-h-screen bg-zinc-900/90 text-white/80";
+  container.className = "min-h-screen bg-stone-950 text-white/80";
 
   const inner = document.createElement("div");
   inner.className = "max-w-7xl mx-auto px-4 py-6";
@@ -86,7 +86,7 @@ export default function watched(isLoggedIn: boolean): HTMLElement {
   })
   .catch((error) => {
     loadingMessage.textContent ="Kunde inte ladda historik";
-    loadingMessage.className = "col-span-full text-center text-rose-500 py-8";
+    loadingMessage.className = "col-span-full text-center text-rose-800/80 py-8";
     console.error(error);
   });
 

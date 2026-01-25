@@ -15,12 +15,24 @@ export default function home(isLoggedIn: boolean): HTMLElement {
   // Hero Image / Banner
 
   //Image container
+  const heroContainer = document.createElement("div");
+  heroContainer.className = "text-center relative text-white";
+
+  //Text container
+  const welcomeText = document.createElement("div");
+  welcomeText.innerText = "Välkommen till";
+  welcomeText.className = "text-[48px] font-bold text-white/80 z-10 absolute top-5 left-7 tracking-wider";
+  const chasText = document.createElement("div");
+  chasText.innerText = "Chas n Chill";
+  chasText.className = "text-[48px] font-bold text-red-400/70 z-10 absolute top-22 left-7 tracking-wider";
   
+  //Banner
   const heroImage = document.createElement("img");
-  heroImage.className = "mb-6 h-64 w-full rounded-2xl object-cover border border-white/10 bg-black/40 shadow-inner brightness-70";
+  heroImage.className = "z-0 mb-6 h-64 w-full rounded-2xl object-cover border border-white/10 bg-black/40 shadow-inner brightness-70";
   heroImage.src = "/img/banner/dune-2-banner-1.jpg"; 
   heroImage.alt = "Blade Runner Hero Banner";
 
+  //Img element pictures
   const heroImages = [
     { src: "/img/banner/bladerunner-banner.jpg", alt: "Blade Runner Hero"},
     { src: "/img/banner/dune-2-banner-1.jpg", alt: "Dune 2 Banner 1"},
@@ -28,10 +40,11 @@ export default function home(isLoggedIn: boolean): HTMLElement {
     { src: "/img/banner/killers-of-the-flower-moon-banner.jpg", alt: "Killers of the flower Moon Banner"},
   ];
 
+  //Update banner function
   const updateHeroImage= (imgElement: HTMLImageElement) => {
     const currentHour = new Date().getSeconds();
     const imageIndex = currentHour % heroImages.length;
-    const selectedImage = heroImages[imageIndex]
+    const selectedImage = heroImages[imageIndex];
 
     imgElement.src = selectedImage.src;
     imgElement.alt = selectedImage.alt;
@@ -41,7 +54,10 @@ export default function home(isLoggedIn: boolean): HTMLElement {
 
   setInterval(() => updateHeroImage(heroImage), 100000);
 
-  container.appendChild(heroImage);
+  heroContainer.appendChild(heroImage);
+  heroContainer.appendChild(welcomeText);
+  heroContainer.appendChild(chasText);
+  container.appendChild(heroContainer);
 
   // Lägg till sökfältet högst upp
   container.appendChild(SearchComponent());
@@ -87,7 +103,7 @@ export default function home(isLoggedIn: boolean): HTMLElement {
   controls.innerHTML = `
     <label class="text-xs text-white/70">
       Per sida
-      <select id="pageSize" class="ml-2 rounded-lg border border-white/10 bg-zinc-800 px-3 py-2 text-xs text-white outline-none">
+      <select id="pageSize" class="ml-2 rounded-lg border border-white/10 bg-zinc-900/70 px-3 py-2 text-xs text-white outline-none">
         <option value="20">20</option>
         <option value="25">25</option>
         <option value="50">50</option>
@@ -97,7 +113,7 @@ export default function home(isLoggedIn: boolean): HTMLElement {
 
     <label class="text-xs text-white/70">
       Sortera
-      <select id="sort" class="ml-2 rounded-lg border border-white/10 bg-zinc-800 px-3 py-2 text-xs text-white outline-none">
+      <select id="sort" class="ml-2 rounded-lg border border-white/10 bg-zinc-900/70 px-3 py-2 text-xs text-white outline-none">
         <option value="popular" selected>Popular</option>
         <option value="rating">Rating</option>
         <option value="release">Release</option>
@@ -559,14 +575,14 @@ export default function home(isLoggedIn: boolean): HTMLElement {
       </div>
 
       <div class="grid place-content-center gap-2">
-        <div class="flex items-center content-center gap-2">
+        <div class="flex items-center content-center gap-1 flex-col md:flex-row gap-2">
           <button
             data-id="${movie.id}"
             data-action="watchlist"
             ${watchlistDisabled ? "disabled" : ""}
-            class="flex items-center content-center rounded-lg px-4 py-2 text-[11px] font-semibold transition truncate h-8.5
+            class="flex items-center content-center rounded-lg px-17 md:px-5 text-[11px] font-semibold transition truncate h-8.5
               ${watchlistDisabled ? "bg-white/10 text-white/50 cursor-not-allowed" : "bg-emerald-400/90 text-black hover:bg-emerald-400/70"}">
-            <span class="inline-flex items-center justify-center gap-2">
+            <span class="inline-flex items-center justify-center gap-1">
               ${Icons.bookmark({ className: "h-3 w-3 object-cover" })}
               Watchlist
             </span>
@@ -576,7 +592,7 @@ export default function home(isLoggedIn: boolean): HTMLElement {
             data-id="${movie.id}"
             data-action="watched"
             ${watchedDisabled ? "disabled" : ""}
-            class="flex items-center content-center rounded-lg px-6 py-4 text-[11px] font-semibold transition truncate h-8.5
+            class="flex items-center content-center rounded-lg px-17 md:px-5 text-[12px] font-semibold transition truncate h-8.5
               ${watchedDisabled ? "bg-white/10 text-white/50 cursor-not-allowed" : "bg-red-500/75 text-black hover:bg-red-500/55"}">
               ${watchedLabel}
           </button>
