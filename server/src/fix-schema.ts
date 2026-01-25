@@ -1,19 +1,13 @@
-import Database from 'better-sqlite3';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import db from './database.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+console.log('🔄 Updating database schema...');
 
-// Initiera databasen
-const db = new Database(join(__dirname, '../database.db'));
+try {
+  // Drop the old table
+  db.exec('DROP TABLE IF EXISTS movies');
+  console.log('✓ Dropped old movies table');
 
-// Slå på foreign keys
-db.pragma('foreign_keys = ON');
-
-// Skapa tabeller
-const initDatabase = (): void => {
-  // Movies-tabell (med user_id för Clerk)
+  // Recreate with new schema including user_id
   const createMoviesTable = `
     CREATE TABLE IF NOT EXISTS movies (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,12 +29,9 @@ const initDatabase = (): void => {
   `;
 
   db.exec(createMoviesTable);
-  console.log('✓ Databastabeller initierade');
-};
+  console.log('✓ Created new movies table with user_id column');
+  console.log('✅ Schema update complete.');
 
-// Initiera databasen vid import
-initDatabase();
-
-export default db;
-
-
+} catch (error) {
+  console.error('❌ Failed to update schema:', error);
+}

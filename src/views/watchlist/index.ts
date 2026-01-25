@@ -3,7 +3,7 @@ import { deleteMovie, getMovies, updateMovie } from "../../services/movieApi";
 import type { DatabaseMovie } from "../../types/movie";
 import { ratingComponent } from "../../components/review-rating";
 
-export default function watchlist(): HTMLElement {
+export default function watchlist(isLoggedIn: boolean): HTMLElement {
   const container = document.createElement("div");
   container.className = "min-h-screen bg-zinc-900/90 text-white";
 
