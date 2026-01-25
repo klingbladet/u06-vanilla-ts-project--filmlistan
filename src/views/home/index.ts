@@ -576,7 +576,7 @@ export default function home(isLoggedIn: boolean): HTMLElement {
             data-id="${movie.id}"
             data-action="watched"
             ${watchedDisabled ? "disabled" : ""}
-            class="flex items-center content-center rounded-lg px-6 py-4 text-[11px] font-semibold transition truncate h-8.5 margin-right
+            class="flex items-center content-center rounded-lg px-6 py-4 text-[11px] font-semibold transition truncate h-8.5
               ${watchedDisabled ? "bg-white/10 text-white/50 cursor-not-allowed" : "bg-red-500/75 text-black hover:bg-red-500/55"}">
               ${watchedLabel}
           </button>
