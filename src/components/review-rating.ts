@@ -94,7 +94,7 @@ export function ratingComponent(initialRating: number = 0, onRate?: (rating: num
   scoreText.textContent = 'Ditt betyg';
   scoreText.className = "text-xs text-zinc-400 mb-1";
   
-  scoreNumber.textContent = initialRating > 0 ? `${initialRating}/5` : '-';
+  scoreNumber.textContent = initialRating > 0 ? `${initialRating}/10` : '-';
   scoreNumber.className = "text-sm font-semibold text-white/80 mt-1";
   
   starsContainer.style.display = 'inline-block';
@@ -103,7 +103,7 @@ export function ratingComponent(initialRating: number = 0, onRate?: (rating: num
 
   function renderStars() {
     starsContainer.innerHTML = '';
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 1; i <= 10; i++) {
       const starElement = document.createElement('span');
       starElement.textContent = '★';
       starElement.classList.add('star');
@@ -124,7 +124,7 @@ export function ratingComponent(initialRating: number = 0, onRate?: (rating: num
       currentRating = ratingValue;
       
       renderStars();
-      scoreNumber.textContent = `${currentRating}/5`;
+      scoreNumber.textContent = `${currentRating}/10`;
       
       if (onRate) {
         onRate(currentRating);

@@ -338,7 +338,7 @@ export default function home(isLoggedIn: boolean): HTMLElement {
       try {
         if (store.popularMovies.length === 0) await loadPopularMovies(false);
         await ensurePopularCount(perPage);
-        fullList = store.popularMovies;
+        fullList = applyFilters(store.popularMovies);
       } finally {
         isLoading = false;
         render();
@@ -524,7 +524,7 @@ export default function home(isLoggedIn: boolean): HTMLElement {
       ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
       : "https://placehold.co/500x750?text=No+Image";
 
-  const fav = isFavorite(movie.id);
+   const fav = isFavorite(movie.id);
 
     const isSaved = !!dbMovie;
     const isWatchlist = dbMovie?.status === "watchlist";
@@ -576,7 +576,7 @@ export default function home(isLoggedIn: boolean): HTMLElement {
             data-id="${movie.id}"
             data-action="watched"
             ${watchedDisabled ? "disabled" : ""}
-            class="flex items-center content-center rounded-lg px-6 py-4 text-[11px] font-semibold transition truncate h-8.5
+            class="flex items-center content-center rounded-lg px-6 py-4 text-[11px] font-semibold transition truncate h-8.5 margin-right
               ${watchedDisabled ? "bg-white/10 text-white/50 cursor-not-allowed" : "bg-red-500/75 text-black hover:bg-red-500/55"}">
               ${watchedLabel}
           </button>
@@ -597,7 +597,7 @@ export default function home(isLoggedIn: boolean): HTMLElement {
         </button>
       </div>
     </div>
-  `;
+   `;
 
     const img = card.querySelector("img")!;
     img.addEventListener("load", () => img.classList.remove("opacity-0"));
