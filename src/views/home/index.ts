@@ -1,15 +1,14 @@
-import type { TMDBMovie, DatabaseMovie, Genre } from "../../types/movie"; // Merged import: added Genre
-import { store, loadPopularMovies, loadRecommendations, ensurePopularCount } from "../../lib/store"; // Merged import: added loadRecommendations, ensurePopularCount
+import type { TMDBMovie, DatabaseMovie, Genre } from "../../types/movie.ts"; // Merged import: added Genre
+import { store, loadPopularMovies, loadRecommendations, ensurePopularCount, setRenderCallback } from "../../lib/store"; // Merged import: added loadRecommendations, ensurePopularCount
 import { SearchComponent } from "../../components/search";
 import createMovieModal from "../../components/Modal";
 import { getMovies, upsertMovieStatusByTmdbId } from "../../services/movieApi";
-import { isLoggedIn } from "../../lib/auth";
 import { getFavorites, isFavorite, toggleFavorite, syncFavoriteToDatabase } from "../../lib/favorites";
 import { Icons } from "../../components/icons";
 import { getGenres } from '../../services/tmdbApi'; // Keep getGenres
 import { createFilterComponent } from '../../components/filter'; // Keep createFilterComponent
 
-export default function home(): HTMLElement {
+export default function home(isLoggedIn: boolean): HTMLElement {
   const container = document.createElement("div");
   container.className = "home-view p-4 max-w-7xl mx-auto";
 
@@ -122,11 +121,6 @@ export default function home(): HTMLElement {
   const gridWrap = document.createElement("div");
   gridWrap.className = "relative mt-6";
   inner.appendChild(gridWrap);
-
-  gridWrap.innerHTML = `
-    <div class="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-zinc-950 to-transparent"></div>
-    <div class="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-zinc-950 to-transparent"></div>
-  `;
 
   // --- Start Filter Component Re-integration ---
   // Skapa en temporär placeholder för filtren som visas medan de laddas
@@ -396,6 +390,8 @@ export default function home(): HTMLElement {
   });
   // --- End Filter update trigger ---
 
+  // Listen to store updates (search etc)
+  setRenderCallback(buildFullListForCurrentView);
 
   // Load DB movies
   getMovies()
@@ -470,8 +466,23 @@ export default function home(): HTMLElement {
     const tmdbMovie = fullList.find((m) => m.id === movieId);
     if (!tmdbMovie) return;
 
+    // Favorite
+    if (action === "favorite") {
+      if (!isLoggedIn) {
+        showToast("Du måste logga in först.", false);
+        window.history.pushState({}, "", "/login");
+        window.dispatchEvent(new PopStateEvent("popstate"));
+        return;
+      }
+      toggleFavorite(tmdbMovie);
+      heartBurstAt(btn);
+      showToast("Favorit uppdaterad");
+      render();
+      return;
+    }
+
     // Watchlist / watched
-    if (!isLoggedIn()) {
+    if (!isLoggedIn) {
       showToast("Du måste logga in först.", false);
       window.history.pushState({}, "", "/login");
       window.dispatchEvent(new PopStateEvent("popstate"));
@@ -513,7 +524,7 @@ export default function home(): HTMLElement {
       ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
       : "https://placehold.co/500x750?text=No+Image";
 
-  const fav = isFavorite(movie.id);
+   const fav = isFavorite(movie.id);
 
     const isSaved = !!dbMovie;
     const isWatchlist = dbMovie?.status === "watchlist";
@@ -528,7 +539,7 @@ export default function home(): HTMLElement {
     const release = movie.release_date ?? "";
 
     card.innerHTML = `
-    <div class="relative aspect-[2/3] bg-zinc-800">
+    <div class="relative aspect-[2/3]">
       <img src="${imageUrl}" alt="${movie.title}" loading="lazy"
         class="h-full w-full object-cover opacity-0 transition duration-500 group-hover:scale-[1.03]" />
       <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent transition duration-500 group-hover:scale-[1.03]"></div>
@@ -553,7 +564,7 @@ export default function home(): HTMLElement {
             data-id="${movie.id}"
             data-action="watchlist"
             ${watchlistDisabled ? "disabled" : ""}
-            class="flex items-center content-center rounded-lg px-5 py-2 text-[11px] font-semibold transition
+            class="flex items-center content-center rounded-lg px-4 py-2 text-[11px] font-semibold transition truncate h-8.5
               ${watchlistDisabled ? "bg-white/10 text-white/50 cursor-not-allowed" : "bg-emerald-400/90 text-black hover:bg-emerald-400/70"}">
             <span class="inline-flex items-center justify-center gap-2">
               ${Icons.bookmark({ className: "h-3 w-3 object-cover" })}
@@ -565,7 +576,7 @@ export default function home(): HTMLElement {
             data-id="${movie.id}"
             data-action="watched"
             ${watchedDisabled ? "disabled" : ""}
-            class="flex items-center content-center rounded-lg px-4 py-2 text-[11px] font-semibold transition
+            class="flex items-center content-center rounded-lg px-6 py-4 text-[11px] font-semibold transition truncate h-8.5
               ${watchedDisabled ? "bg-white/10 text-white/50 cursor-not-allowed" : "bg-red-500/75 text-black hover:bg-red-500/55"}">
               ${watchedLabel}
           </button>
@@ -586,7 +597,7 @@ export default function home(): HTMLElement {
         </button>
       </div>
     </div>
-  `;
+   `;
 
     const img = card.querySelector("img")!;
     img.addEventListener("load", () => img.classList.remove("opacity-0"));
@@ -599,12 +610,6 @@ export default function home(): HTMLElement {
     favoriteBtn.addEventListener("click", (e) => {
       e.stopPropagation(); //Prevents bubbling to container
 
-      if (!isLoggedIn()) {
-        showToast("Du måste logga in först.", false);
-        window.history.pushState({}, "", "/login");
-        window.dispatchEvent(new PopStateEvent("popstate"));
-        return;
-      }
 
       toggleFavorite(movie);
       heartBurstAt(favoriteBtn);
@@ -734,7 +739,7 @@ export default function home(): HTMLElement {
         genre_ids: movie.genre_ids || [],
       };
 
-      const { modal, openModal } = createMovieModal(tmdbFormat, dbMovie, (updatedMovie) => {
+      const { modal, openModal } = createMovieModal(tmdbFormat, dbMovie, (updatedMovie: DatabaseMovie) => {
         const idx = savedMovies.findIndex((m) => m.id === updatedMovie.id)
         if (idx >= 0) {
           savedMovies[idx] = updatedMovie;
