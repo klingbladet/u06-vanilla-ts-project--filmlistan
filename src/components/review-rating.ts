@@ -111,8 +111,8 @@ export function ratingComponent(initialRating: number = 0, onRate?: (rating: num
       starElement.style.width = "10px"
       starElement.style.color = i <= currentRating ? '#fbbe24e2' : '#52525b'; // amber-400 vs zinc-600
       starElement.dataset.value = i.toString();
+      starElement.classList.add('star', 'text-s', 'md:text-xl');
       starsContainer.append(starElement);
-      starElement.className = 'text-xs md:text-xl'
     }
   }
 

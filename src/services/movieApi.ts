@@ -1,7 +1,7 @@
 // API-anrop till Movie API
 import type { DatabaseMovie, TMDBMovie } from "../types/movie.ts";
 
-const API_BASE_URL = "http://localhost:3000/api";
+const API_BASE_URL = "http://10.100.2.90:3000/api";
 
 async function getHeaders(): Promise<HeadersInit> {
   const headers: Record<string, string> = {

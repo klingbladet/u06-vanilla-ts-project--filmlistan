@@ -21,11 +21,11 @@ export default function home(isLoggedIn: boolean): HTMLElement {
   //Text container
   const welcomeText = document.createElement("div");
   welcomeText.innerText = "VÄLKOMMEN TILL";
-  welcomeText.style.fontFamily = "fantasy";
+  welcomeText.style.fontFamily = "Impact";
   welcomeText.className = "text-[24px] md:text-[48px] font-medium text-white/60 z-10 absolute top-5 left-7 tracking-widest";
   const chasText = document.createElement("div");
   chasText.innerText = "CHAS N CHILL";
-  chasText.style.fontFamily = "fantasy";
+  chasText.style.fontFamily = "Impact";
   chasText.className = "text-[24px] md:text-[48px] font-medium text-red-500/60 z-10 absolute top-18 md:top-22 left-7 tracking-widest";
   
   //Banner
@@ -325,10 +325,10 @@ export default function home(isLoggedIn: boolean): HTMLElement {
     chips.querySelectorAll<HTMLButtonElement>("button").forEach((b) => {
       const isActive = b.dataset.chip === activeChip;
       if (isActive) {
-        b.classList.add("bg-red-500/75", "text-zinc-800", "border-red-400/75");
+        b.classList.add("bg-red-500/75", "text-zinc-900/90", "border-red-400/75");
         b.classList.remove("bg-white/5", "text-white/80");
       } else {
-        b.classList.remove("bg-red-500/75", "text-zinc-800", "border-red-400/75");
+        b.classList.remove("bg-red-500/75", "text-zinc-900/90", "border-red-400/75");
         b.classList.add("bg-white/5", "text-white/80");
       }
     }); 
@@ -708,8 +708,8 @@ export default function home(isLoggedIn: boolean): HTMLElement {
         // Update UI locally without full re-render
         if (action === "watchlist") {
           btn.textContent = "Saved";
-          btn.classList.add("bg-white/10", "text-white/50", "cursor-not-allowed", "px-17");
-          btn.classList.remove("bg-emerald-400/90", "text-black", "hover:bg-emerald-400/70", "px-13");
+          btn.classList.add("bg-white/10", "text-white/50", "cursor-not-allowed", "px-17", "md:px-10");
+          btn.classList.remove("bg-emerald-400/90", "text-black", "hover:bg-emerald-400/70", "px-13", "md:px-5");
           // Update local scope
           dbMovie = updated;
         } else { // watched
@@ -718,7 +718,8 @@ export default function home(isLoggedIn: boolean): HTMLElement {
           btn.classList.remove("bg--500/75", "text-black", "hover:bg-red-500/55");
 
           watchlistBtn.disabled = true;
-          watchlistBtn.classList.add("bg-white/10", "text-white/50", "cursor-not-allowed");
+          watchlistBtn.classList.add("bg-white/10", "text-white/50", "cursor-not-allowed", "md:px-5");
+          watchlistBtn.classList.remove("md:px-10");
           watchlistBtn.textContent = "Saved";
           // Update local scope
           dbMovie = updated;
