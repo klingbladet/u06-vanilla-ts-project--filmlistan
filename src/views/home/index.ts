@@ -21,10 +21,10 @@ export default function home(isLoggedIn: boolean): HTMLElement {
   //Text container
   const welcomeText = document.createElement("div");
   welcomeText.innerText = "Välkommen till";
-  welcomeText.className = "text-[48px] font-bold text-white/80 z-10 absolute top-5 left-7 tracking-wider";
+  welcomeText.className = "text-[48px] font-bold text-white/60 z-10 absolute top-5 left-7 tracking-wider";
   const chasText = document.createElement("div");
   chasText.innerText = "Chas n Chill";
-  chasText.className = "text-[48px] font-bold text-red-400/70 z-10 absolute top-22 left-7 tracking-wider";
+  chasText.className = "text-[48px] font-bold text-red-500/60 z-10 absolute top-22 left-7 tracking-wider";
   
   //Banner
   const heroImage = document.createElement("img");
