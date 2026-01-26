@@ -48,7 +48,7 @@ export default function watchlist(isLoggedIn: boolean): HTMLElement {
     grid.innerHTML = `
       <div class="col-span-full flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5 p-12 text-center">
         <div class="text-4xl mb-4">📺</div>
-        <h3 class="text-lg font-bold text-white">Din lista är tom</h3>
+        <h3 class="text-lg font-semibold text-white">Din lista är tom</h3>
         <p class="text-zinc-400 text-sm mt-2 max-w-xs mx-auto">Gå till startsidan för att hitta och spara nya filmer.</p>
         <a href="/" class="mt-6 rounded-xl bg-red px-6 py-2 text-sm font-bold text-black transition hover:bg-red-800">
           Hitta filmer

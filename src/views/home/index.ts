@@ -20,11 +20,13 @@ export default function home(isLoggedIn: boolean): HTMLElement {
 
   //Text container
   const welcomeText = document.createElement("div");
-  welcomeText.innerText = "Välkommen till";
-  welcomeText.className = "text-[48px] font-bold text-white/60 z-10 absolute top-5 left-7 tracking-wider";
+  welcomeText.innerText = "VÄLKOMMEN TILL";
+  welcomeText.style.fontFamily = "fantasy";
+  welcomeText.className = "text-[24px] md:text-[48px] font-medium text-white/60 z-10 absolute top-5 left-7 tracking-widest";
   const chasText = document.createElement("div");
-  chasText.innerText = "Chas n Chill";
-  chasText.className = "text-[48px] font-bold text-red-500/60 z-10 absolute top-22 left-7 tracking-wider";
+  chasText.innerText = "CHAS N CHILL";
+  chasText.style.fontFamily = "fantasy";
+  chasText.className = "text-[24px] md:text-[48px] font-medium text-red-500/60 z-10 absolute top-18 md:top-22 left-7 tracking-widest";
   
   //Banner
   const heroImage = document.createElement("img");
@@ -543,13 +545,12 @@ export default function home(isLoggedIn: boolean): HTMLElement {
    const fav = isFavorite(movie.id);
 
     const isSaved = !!dbMovie;
-    const isWatchlist = dbMovie?.status === "watchlist";
     const isWatched = dbMovie?.status === "watched";
 
     const watchlistDisabled = isSaved;
     const watchedDisabled = isWatched;
 
-    const watchedLabel = isWatchlist ? "Mark as watched" : isWatched ? "watched" : "✓ Watched";
+    const watchedLabel = isWatched ? "watched" : "✓ Watched";
 
     const rating = Number.isFinite(movie.vote_average) ? movie.vote_average.toFixed(1) : "0.0";
     const release = movie.release_date ?? "";
@@ -580,7 +581,7 @@ export default function home(isLoggedIn: boolean): HTMLElement {
             data-id="${movie.id}"
             data-action="watchlist"
             ${watchlistDisabled ? "disabled" : ""}
-            class="flex items-center content-center rounded-lg px-17 md:px-5 text-[11px] font-semibold transition truncate h-8.5
+            class="flex items-center content-center rounded-lg px-13 md:px-5 text-[11px] font-semibold transition truncate h-8.5
               ${watchlistDisabled ? "bg-white/10 text-white/50 cursor-not-allowed" : "bg-emerald-400/90 text-black hover:bg-emerald-400/70"}">
             <span class="inline-flex items-center justify-center gap-1">
               ${Icons.bookmark({ className: "h-3 w-3 object-cover" })}
@@ -593,7 +594,7 @@ export default function home(isLoggedIn: boolean): HTMLElement {
             data-action="watched"
             ${watchedDisabled ? "disabled" : ""}
             class="flex items-center content-center rounded-lg text-[12px] font-semibold transition truncate h-8.5
-              ${watchedDisabled ? "bg-white/10 text-white/50 cursor-not-allowed px-19 md:px-7" : "bg-red-500/75 text-black hover:bg-red-500/55 px-17 md:px-5"}">
+              ${watchedDisabled ? "bg-white/10 text-white/50 cursor-not-allowed px-15 md:px-7" : "bg-red-500/75 text-black hover:bg-red-500/55 px-13 md:px-5"}">
               ${watchedLabel}
           </button>
         </div>
@@ -707,8 +708,8 @@ export default function home(isLoggedIn: boolean): HTMLElement {
         // Update UI locally without full re-render
         if (action === "watchlist") {
           btn.textContent = "Saved";
-          btn.classList.add("bg-white/10", "text-white/50", "cursor-not-allowed");
-          btn.classList.remove("bg-emerald-400/90", "text-black", "hover:bg-emerald-400/70");
+          btn.classList.add("bg-white/10", "text-white/50", "cursor-not-allowed", "px-17");
+          btn.classList.remove("bg-emerald-400/90", "text-black", "hover:bg-emerald-400/70", "px-13");
           // Update local scope
           dbMovie = updated;
         } else { // watched

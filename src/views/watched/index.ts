@@ -48,6 +48,7 @@ export default function watched(isLoggedIn: boolean): HTMLElement {
         <p class="text-zinc-500 text-sm mt-2">När du markerar filmer som "Watched" hamnar de här.</p>
       </div>
     `;
+    clearBtn.style.display = 'none';
   }
 
   getMovies().then((movies: DatabaseMovie[]) => {
@@ -56,7 +57,10 @@ export default function watched(isLoggedIn: boolean): HTMLElement {
     
     if (watchedMovies.length === 0) {
       showEmptyMessage();
+      clearBtn.classList.remove("md:flex");
       return;
+    } else {
+      clearBtn.classList.add("md:flex");
     }
 
     clearBtn.addEventListener('click', async () => {
