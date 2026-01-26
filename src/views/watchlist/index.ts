@@ -5,7 +5,7 @@ import { ratingComponent } from "../../components/review-rating";
 
 export default function watchlist(isLoggedIn: boolean): HTMLElement {
   const container = document.createElement("div");
-  container.className = "min-h-screen bg-grey text-white";
+  container.className = "min-h-screen text-white";
 
   const inner = document.createElement("div");
   inner.className = "max-w-7xl mx-auto px-4 py-6";

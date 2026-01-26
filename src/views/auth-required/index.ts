@@ -1,6 +1,6 @@
 export default function authRequired(title = "Du måste logga in"): HTMLElement {
     const container = document.createElement("div");
-    container.className = "min-h-screen bg-zinc-950 text-white/80";
+    container.className = "min-h-screen text-white/80";
   
     const inner = document.createElement("div");
     inner.className = "max-w-3xl mx-auto px-4 py-10";
@@ -24,11 +24,6 @@ export default function authRequired(title = "Du måste logga in"): HTMLElement 
           <a href="/" class="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/80 hover:bg-white/10">
             Tillbaka till Home
           </a>
-        </div>
-  
-        <div class="mt-6 rounded-xl border border-white/10 bg-black/30 p-4 text-sm text-white/70">
-          Demo-konto: <span class="font-semibold text-white/80">demo@filmkollen.se</span> /
-          <span class="font-semibold text-white/80">film123</span>
         </div>
       </div>
     `;
