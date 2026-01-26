@@ -108,10 +108,11 @@ export function ratingComponent(initialRating: number = 0, onRate?: (rating: num
       starElement.textContent = '★';
       starElement.classList.add('star');
       starElement.style.cursor = 'pointer';
-      starElement.style.fontSize = '1.2rem';
+      starElement.style.width = "10px"
       starElement.style.color = i <= currentRating ? '#fbbe24e2' : '#52525b'; // amber-400 vs zinc-600
       starElement.dataset.value = i.toString();
       starsContainer.append(starElement);
+      starElement.className = 'text-xs md:text-xl'
     }
   }
 
