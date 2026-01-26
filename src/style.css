@@ -1,7 +1,65 @@
-@import "./global.css";
 @import "tailwindcss";
 
 @theme {
     --color-red: #bf001f;
     --color-
+}
+
+/* Design tokens */
+:root {
+  --color-background: oklch(14.7% 0.004 49.25); /* zinc-950 */
+  --color-surface: #0f0f12;
+  --color-surface-2: #141418;
+  --color-text: #ffffff;
+  --color-muted: rgba(255, 255, 255, 0.72);
+  --color-border: rgba(255, 255, 255, 0.1);
+
+  --color-accent: #bf001f; /* amber-400 */
+
+  --font-family-base: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-size-base: 16px;
+  --line-height-base: 1.5;
+
+  --spacing-md: 1rem;
+  --radius-md: 12px;
+}
+
+/* Base */
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+/* Images */
+img { max-width: 100%; display: block; }
+
+/* Active nav link (main.ts sätter class "active") */
+.nav-link.active {
+  background: #ff2d3bd2;
+  color: oklch(10% 0 0) !important;
+  font-weight: 600;
+}
+
+/* extra Favorit-animation (hjärt-burst) */
+@keyframes heartFloatUp {
+  0%   { transform: translate(-50%, -20%) scale(0.9); opacity: 0; }
+  20%  { opacity: 1; }
+  100% { transform: translate(-50%, -120%) scale(1.2); opacity: 0; }
+}
+
+.heart-burst {
+  position: fixed;
+  z-index: 80;
+  pointer-events: none;
+  font-size: 18px;
+  animation: heartFloatUp 650ms ease-out forwards;
+  text-shadow: 0 6px 16px rgba(0,0,0,0.4);
 }
