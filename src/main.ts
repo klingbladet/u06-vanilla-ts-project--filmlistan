@@ -63,7 +63,7 @@ async function renderApp() {
   const content = getCurrentPageContent();
   
   const main = document.createElement("main");
-  main.className = "mx-auto max-w-7xl px-4 py-10 text-white min-h-[calc(100vh-200px)]"; // Min-height för att footern inte ska flyga upp
+  main.className = "mx-auto max-w-7xl px-4 py-10 text-white/80 min-h-[calc(100vh-200px)]"; // Min-height för att footern inte ska flyga upp
 
   if (typeof content === "string") {
     main.innerHTML = `<h1 class="text-xl font-bold">${content}</h1>`;
@@ -95,7 +95,7 @@ async function renderApp() {
       clerk.mountSignIn(signInDiv, {
         appearance: {
           variables: {
-            colorPrimary: '#fbbf24' // Amber-400 för att matcha din design
+            colorPrimary: 'rgba(191, 0, 32, 0.95)' // Amber-400 för att matcha din design
           }
         }
       });
@@ -111,11 +111,11 @@ function updateActiveLink() {
   document.querySelectorAll(".nav-link").forEach((a) => {
     const href = a.getAttribute("href");
     if (href === path) {
-      a.classList.add("bg-white/10", "text-white");
-      a.classList.remove("text-white/75");
+      a.classList.add("bg-white/10", "text-white/80");
+      a.classList.remove("text-white/70");
     } else {
-      a.classList.remove("bg-white/10", "text-white");
-      a.classList.add("text-white/75");
+      a.classList.remove("bg-white/10", "text-white/80");
+      a.classList.add("text-white/70");
     }
   });
 }
