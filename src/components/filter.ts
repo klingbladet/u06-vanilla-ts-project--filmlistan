@@ -28,7 +28,7 @@ export function createFilterComponent(genres: Genre[]): HTMLElement {
   // Skapar dropdownen
   const genreSelect = document.createElement('select');
   genreSelect.id = 'genreSelect';
-  genreSelect.className = 'bg-zinc-800 text-white/80 border border-white/10 rounded-lg px-2 py-1 text-xs';
+  genreSelect.className = 'bg-zinc-900/70 text-white/80 border border-white/10 rounded-lg px-2 py-1 text-xs';
 
   // Default-alternativ
   const defaultOption = document.createElement('option');

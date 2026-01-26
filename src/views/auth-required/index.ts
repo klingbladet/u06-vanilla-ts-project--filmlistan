@@ -1,6 +1,6 @@
 export default function authRequired(title = "Du måste logga in"): HTMLElement {
     const container = document.createElement("div");
-    container.className = "min-h-screen bg-zinc-950 text-white";
+    container.className = "min-h-screen bg-zinc-950 text-white/80";
   
     const inner = document.createElement("div");
     inner.className = "max-w-3xl mx-auto px-4 py-10";
@@ -8,7 +8,7 @@ export default function authRequired(title = "Du måste logga in"): HTMLElement 
   
     inner.innerHTML = `
       <div class="rounded-2xl border border-white/10 bg-white/5 p-6 md:p-8">
-        <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+        <h1 class="text-2xl md:text-3xl font-bold tracking-tight">
           ${title}
         </h1>
   
@@ -17,7 +17,7 @@ export default function authRequired(title = "Du måste logga in"): HTMLElement 
         </p>
   
         <div class="mt-6 flex flex-wrap gap-3">
-          <a href="/login" class="rounded-xl bg-red px-4 py-3 text-sm font-semibold text-black hover:bg-red-800">
+          <a href="/login" class="rounded-xl bg-red-500/75 px-4 py-3 text-sm font-semibold text-white/80 hover:bg-red-500/55">
             Gå till Logga in
           </a>
   
@@ -27,8 +27,8 @@ export default function authRequired(title = "Du måste logga in"): HTMLElement 
         </div>
   
         <div class="mt-6 rounded-xl border border-white/10 bg-black/30 p-4 text-sm text-white/70">
-          Demo-konto: <span class="font-semibold text-white">demo@filmkollen.se</span> /
-          <span class="font-semibold text-white">film123</span>
+          Demo-konto: <span class="font-semibold text-white/80">demo@filmkollen.se</span> /
+          <span class="font-semibold text-white/80">film123</span>
         </div>
       </div>
     `;
