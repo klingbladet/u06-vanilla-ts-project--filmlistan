@@ -14,6 +14,7 @@
   "license": "MIT",
   "dependencies": {
     "@clerk/backend": "^2.29.4",
+    "@clerk/nextjs": "^6.36.10",
     "better-sqlite3": "^12.5.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
