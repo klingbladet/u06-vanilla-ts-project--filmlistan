@@ -20,11 +20,11 @@ export default function home(isLoggedIn: boolean): HTMLElement {
 
   //Text container
   const welcomeText = document.createElement("div");
-  welcomeText.innerText = "VÄLKOMMEN TILL";
+  welcomeText.innerText = "";
   welcomeText.style.fontFamily = "Impact";
   welcomeText.className = "text-[24px] md:text-[48px] font-medium text-white/60 z-10 absolute top-5 left-7 tracking-widest";
   const chasText = document.createElement("div");
-  chasText.innerText = "CHAS N CHILL";
+  chasText.innerText = "";
   chasText.style.fontFamily = "Impact";
   chasText.className = "text-[24px] md:text-[48px] font-medium text-red-500/60 z-10 absolute top-18 md:top-22 left-7 tracking-widest";
   
